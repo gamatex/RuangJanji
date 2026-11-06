@@ -1,7 +1,7 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2.57.0';
-import {SUPABASE_URL,requirePublishableKey} from '../../packages/shared/src/config.js';
+import {SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,requirePublishableKey} from '../../packages/shared/src/config.js';
 const $=s=>document.querySelector(s), msg=t=>$('#message').textContent=t;
-const key=globalThis.RUANGJANJI_PUBLISHABLE_KEY || localStorage.getItem('rj_publishable_key');
+const key=SUPABASE_PUBLISHABLE_KEY;
 let db;
 if(!key){msg('Konfigurasi belum lengkap: isi publishable key Supabase pada config.js sebelum digunakan.');}else{db=createClient(SUPABASE_URL,requirePublishableKey(key));init();}
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
