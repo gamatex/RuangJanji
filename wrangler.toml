@@ -1,6 +1,5 @@
 name = "ruangjanji"
 compatibility_date = "2026-11-01"
 
-# Publish only the original RuangJanji website directory, never the repository root.
 [assets]
-directory = "./public_html"
+directory = "."
