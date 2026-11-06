@@ -1,4 +1,4 @@
 export const SUPABASE_URL = 'https://bfaarhffvylqqbxycuds.supabase.co';
-// Replace this with the PUBLIC publishable key from Supabase dashboard.
-// Do not use a service_role or secret key in frontend code.
+// Public client key; Supabase RLS remains mandatory for every table.
+export const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_2Xf6OFt3oIZla83C8cq5jg_W3xOr8R7';
 export function requirePublishableKey(value){if(!value)throw new Error('Missing Supabase publishable key');return value;}
