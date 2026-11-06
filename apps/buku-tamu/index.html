@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RuangJanji Buku Tamu</title><link rel="stylesheet" href="../../packages/shared/style.css"></head>
+<body><header><strong>RuangJanji</strong><small>Buku Tamu Digital</small></header>
+<main><section id="auth" class="panel"><h2>Masuk petugas</h2><form id="login"><input type="email" id="email" placeholder="Email" required><input type="password" id="password" placeholder="Kata sandi" required><button>Masuk</button></form></section>
+<section id="app" hidden><div class="toolbar"><span id="account"></span><button id="logout" class="secondary">Keluar</button></div>
+<label>Pilih acara <select id="event"></select></label>
+<div class="stats"><article class="panel">Total tamu <strong id="total">0</strong></article><article class="panel">Sudah check-in <strong id="checked">0</strong></article></div>
+<form id="guest-form" class="panel"><h2>Tambah tamu</h2><input name="name" placeholder="Nama tamu" required><input name="group_name" placeholder="Grup"><input name="phone" placeholder="Telepon"><input name="quota" type="number" min="1" max="20" value="2"><button>Tambahkan</button></form>
+<h2>Daftar tamu</h2><input id="search" placeholder="Cari nama tamu"><div id="guests"></div></section><p id="message" role="status"></p></main><script type="module" src="./main.js"></script></body></html>
