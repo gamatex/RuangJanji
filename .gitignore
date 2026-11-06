@@ -1,0 +1,15 @@
+node_modules/
+.env
+.env.*
+!.env.example
+**/local.properties
+**/.gradle/
+**/build/
+android/assets/
+android-bukutamu/assets/
+*.apk
+*.aab
+*.jks
+*.keystore
+*.log
+.DS_Store
