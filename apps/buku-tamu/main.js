@@ -1,7 +1,7 @@
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2.57.0';
-import {SUPABASE_URL,requirePublishableKey} from '../../packages/shared/src/config.js';
+import {SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,requirePublishableKey} from '../../packages/shared/src/config.js';
 const $=s=>document.querySelector(s),msg=t=>$('#message').textContent=t;
-const key=globalThis.RUANGJANJI_PUBLISHABLE_KEY||localStorage.getItem('rj_publishable_key');let db,user,guests=[];
+const key=SUPABASE_PUBLISHABLE_KEY;let db,user,guests=[];
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 if(!key)msg('Publishable key Supabase belum dikonfigurasi.');else{db=createClient(SUPABASE_URL,requirePublishableKey(key));db.auth.getSession().then(({data})=>sessionChanged(data.session));db.auth.onAuthStateChange((_e,s)=>{void sessionChanged(s);});}
 async function sessionChanged(s){user=s?.user||null;$('#auth').hidden=!!user;$('#app').hidden=!user;if(!user)return;$('#account').textContent=user.email;const {data,error}=await db.from('events').select('id,title').eq('owner_id',user.id);if(error){msg(error.message);return;}$('#event').innerHTML=(data||[]).map(e=>'<option value="'+safe(e.id)+'">'+safe(e.title)+'</option>').join('');await load();}
