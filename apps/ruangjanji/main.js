@@ -79,6 +79,20 @@ $('#event-form').onsubmit=async e=>{
  if(!error){clearEditor();await loadEvents();}
  }finally{button.disabled=false;}
 };
+async function checkoutEvent(button){
+ if(!user)return;
+ const id=button.dataset.checkout;button.disabled=true;const label=button.textContent;button.textContent='Menyiapkan checkout...';
+ try{
+ const {data:{session}}=await db.auth.getSession();
+ if(!session?.access_token)throw new Error('Silakan masuk kembali.');
+ const response=await fetch(SUPABASE_URL+'/functions/v1/midtrans-checkout',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+session.access_token,'apikey':key},body:JSON.stringify({event_id:id})});
+ const result=await response.json();
+ if(!response.ok)throw new Error(result.error||'Checkout tidak tersedia.');
+ const url=new URL(result.redirect_url);
+ if(url.protocol!=='https:'||url.hostname!=='app.sandbox.midtrans.com')throw new Error('Alamat pembayaran tidak valid.');
+ location.assign(url.href);
+ }catch(error){msg(error.message);button.disabled=false;button.textContent=label;}
+}
 async function editEvent(id){
  const {data,error}=await db.from('events').select('id,title,groom,bride,slug,date,time,venue,address,story,theme,status').eq('id',id).eq('owner_id',user.id).single();
  if(error){msg(error.message);return;}if(data.status!=='draft'){msg('Hanya undangan draft yang dapat diedit pada tahap ini.');return;}
@@ -91,8 +105,8 @@ async function loadEvents(){
  if(error){msg(error.message);return;}
  $('#editor-actions').hidden=!(data||[]).some(x=>x.status==='draft');
  const eventSummary=(data||[]).map(x=>'<div class="event-summary"><strong>'+safe(x.title||'Undangan')+'</strong><small>'+safe(x.status==='published'?'Aktif':'Draft')+'</small></div>').join('')||'<p class="muted">Belum ada undangan. Mulai dengan melihat katalog template.</p>';$('#guest-events').innerHTML=eventSummary;$('#wish-events').innerHTML=eventSummary;
- $('#event-list').innerHTML=(data||[]).map(x=>'<article class="event-card"><span class="tag">'+safe(x.status)+'</span><h3>'+safe(x.title)+'</h3><p class="muted">'+safe(x.theme)+' · '+safe(x.date||'Tanggal belum ditentukan')+'</p><small>Alamat: /'+safe(x.slug)+'</small><p>'+(x.status==='published'?'<a target="_blank" rel="noopener" href="/'+encodeURIComponent(x.slug)+'">Lihat undangan</a>':'Undangan belum dipublikasikan')+'</p>'+(x.status==='draft'?'<button class="outline" type="button" data-edit="'+safe(x.id)+'">Edit undangan</button><button class="outline" type="button" data-media="'+safe(x.id)+'">Foto & galeri</button>':'')+'</article>').join('')||'<div class="empty">Belum ada undangan. Setelah template tersedia, kamu bisa membuat draft pertamamu.</div>';
- document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editEvent(b.dataset.edit));document.querySelectorAll('[data-media]').forEach(b=>b.onclick=()=>openMedia(b.dataset.media));
+ $('#event-list').innerHTML=(data||[]).map(x=>'<article class="event-card"><span class="tag">'+safe(x.status)+'</span><h3>'+safe(x.title)+'</h3><p class="muted">'+safe(x.theme)+' · '+safe(x.date||'Tanggal belum ditentukan')+'</p><small>Alamat: /'+safe(x.slug)+'</small><p>'+(x.status==='published'?'<a target="_blank" rel="noopener" href="/'+encodeURIComponent(x.slug)+'">Lihat undangan</a>':'Undangan belum dipublikasikan')+'</p>'+(x.status==='draft'?'<button class="outline" type="button" data-edit="'+safe(x.id)+'">Edit undangan</button><button class="outline" type="button" data-media="'+safe(x.id)+'">Foto & galeri</button><button class="primary" type="button" data-checkout="'+safe(x.id)+'">Bayar via Midtrans Sandbox</button>':'')+'</article>').join('')||'<div class="empty">Belum ada undangan. Setelah template tersedia, kamu bisa membuat draft pertamamu.</div>';
+ document.querySelectorAll('[data-checkout]').forEach(b=>b.onclick=()=>checkoutEvent(b));document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editEvent(b.dataset.edit));document.querySelectorAll('[data-media]').forEach(b=>b.onclick=()=>openMedia(b.dataset.media));
 }
 
 
