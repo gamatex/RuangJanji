@@ -6,9 +6,9 @@ let db;
 if(!key){msg('Konfigurasi belum lengkap: isi publishable key Supabase pada config.js sebelum digunakan.');}else{db=createClient(SUPABASE_URL,requirePublishableKey(key));init();}
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let user=null, themes=[];
-async function init(){const {data:{session},error}=await db.auth.getSession();if(error)msg(error.message);await sessionChanged(session);db.auth.onAuthStateChange((_event,s)=>{void sessionChanged(s);});}
-async function sessionChanged(s){user=s?.user||null;$('#auth').hidden=!!user;$('#app').hidden=!user;if(!user)return;$('#account').textContent=user.email;await Promise.all([loadThemes(),loadEvents()]);}
-$('#login').onsubmit=async e=>{e.preventDefault();if(!db)return;const {error}=await db.auth.signInWithPassword({email:$('#email').value,password:$('#password').value});msg(error?.message||'Berhasil masuk.');};
+async function init(){const {data:{session},error}=await db.auth.getSession();if(error)msg(error.message);await sessionChanged(session);db.auth.onAuthStateChange((_event,s)=>{setTimeout(()=>{void sessionChanged(s);},0);});}
+async function sessionChanged(s){user=s?.user||null;$('#auth').hidden=!!user;$('#app').hidden=!user;if(!user)return;$('#account').textContent=user.email;try{await Promise.all([loadThemes(),loadEvents()]);}catch(e){msg('Dashboard terbuka, tetapi data gagal dimuat: '+e.message);}}
+$('#login').onsubmit=async e=>{e.preventDefault();if(!db)return;const {data,error}=await db.auth.signInWithPassword({email:$('#email').value,password:$('#password').value});if(error){msg(error.message);return;}if(!data?.session){msg('Sesi belum tersedia. Silakan periksa konfirmasi email.');return;}msg('Berhasil masuk. Memuat dashboard...');await sessionChanged(data.session);};
 $('#signup').onclick=async()=>{
   if(!db)return;
   const form=$('#login');
