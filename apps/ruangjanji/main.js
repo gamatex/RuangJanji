@@ -6,9 +6,9 @@ const key=SUPABASE_PUBLISHABLE_KEY;
 let db;
 if(!key){msg('Konfigurasi belum lengkap: isi publishable key Supabase pada config.js sebelum digunakan.');}else{db=createClient(SUPABASE_URL,requirePublishableKey(key));}
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let user=null, themes=[],mediaEventId=null;
+let user=null, themes=[],mediaEventId=null, eventCache=[];
 async function init(){db.auth.onAuthStateChange((_event,s)=>{setTimeout(()=>{void sessionChanged(s);},0);});const {data,error}=await db.auth.getSession();if(error)msg(error.message);await sessionChanged(data?.session);}
-async function sessionChanged(s){user=s?.user||null;const loggedIn=!!user;document.getElementById('auth').hidden=loggedIn;document.getElementById('app').hidden=!loggedIn;document.getElementById('bottom-nav').hidden=!loggedIn;if(!loggedIn)return;document.getElementById('account').textContent=user.email||'Pelanggan';msg('Dashboard siap.');try{await Promise.all([loadThemes(),loadEvents()]);}catch(e){msg('Dashboard terbuka, tetapi data gagal dimuat: '+e.message);}}
+async function sessionChanged(s){user=s?.user||null;const loggedIn=!!user;document.getElementById('auth').hidden=loggedIn;document.getElementById('app').hidden=!loggedIn;document.getElementById('bottom-nav').hidden=!loggedIn;if(!loggedIn)return;document.getElementById('account').textContent=user.email||'Pelanggan';msg('Dashboard siap.');try{await Promise.all([loadThemes(),loadEvents(),loadOrders()]);}catch(e){msg('Dashboard terbuka, tetapi data gagal dimuat: '+e.message);}}
 $('#login').onsubmit=async e=>{e.preventDefault();if(!db)return;const {data,error}=await db.auth.signInWithPassword({email:$('#email').value,password:$('#password').value});if(error){msg(error.message);return;}if(!data?.session){msg('Sesi belum tersedia. Silakan periksa konfirmasi email.');return;}await sessionChanged(data.session);};
 $('#signup').onclick=async()=>{
   if(!db)return;
@@ -26,7 +26,7 @@ $('#signup').onclick=async()=>{
 $('#logout').onclick=()=>db.auth.signOut();
 const categories=['Semua','Art','Birthday','Deluxe','MiniMotion','Minisite','Motion',"Syar'i"];
 let activeCategory='Semua',searchTerm='';
-function showTab(tab){closeThemeDetail();hideEditor();for(const id of ['home','catalog','events','guests','wishes','account-view'])document.getElementById(id).hidden=id!==tab;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===tab);b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false');});window.scrollTo({top:0,behavior:'instant'});}
+function showTab(tab){closeThemeDetail();closeCheckout();hideEditor();for(const id of ['home','catalog','events','guests','wishes','account-view'])document.getElementById(id).hidden=id!==tab;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===tab);b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false');});window.scrollTo({top:0,behavior:'instant'});}
 document.querySelectorAll('[data-tab],[data-go]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab||b.dataset.go));
 $('#explore').onclick=()=>showTab('catalog');
 function themeCategory(slug){const s=slug.toLowerCase();if(s.startsWith('mini-motion')||s.startsWith('minimotion'))return 'MiniMotion';if(s.startsWith('minisite'))return 'Minisite';if(s.startsWith('birthday'))return 'Birthday';if(s.startsWith('deluxe'))return 'Deluxe';if(s.startsWith('motion'))return 'Motion';if(s.startsWith('syari')||s.startsWith('syar'))return "Syar'i";return 'Art';}
@@ -79,6 +79,33 @@ $('#event-form').onsubmit=async e=>{
  if(!error){clearEditor();await loadEvents();}
  }finally{button.disabled=false;}
 };
+const rupiah=n=>'Rp '+Number(n).toLocaleString('id-ID');
+let checkoutId=null;
+function closeCheckout(){checkoutId=null;const el=$('#checkout-sheet');if(el)el.hidden=true;document.body.classList.remove('detail-open');}
+function openCheckout(id){
+ const event=eventCache.find(x=>x.id===id);if(!event||event.status!=='draft')return;
+ const theme=themes.find(x=>x.slug===event.theme);
+ checkoutId=id;$('#checkout-event').textContent=event.title;$('#checkout-theme').textContent=event.theme;
+ $('#checkout-price').textContent=theme?rupiah(theme.amount):'Tidak tersedia';
+ $('#checkout-total').textContent=theme?rupiah(theme.amount):'Tidak tersedia';
+ $('#checkout-pay').disabled=true;
+ $('#checkout-pay').textContent='Midtrans Sandbox belum dikonfigurasi';
+ $('#checkout-sheet').hidden=false;document.body.classList.add('detail-open');
+}
+$('#close-checkout').onclick=closeCheckout;$('#checkout-cancel').onclick=closeCheckout;
+$('#checkout-sheet').addEventListener('click',e=>{if(e.target.id==='checkout-sheet')closeCheckout();});
+$('#refresh-orders').onclick=()=>loadOrders();
+async function loadOrders(){
+ if(!user)return;
+ const {data,error}=await db.from('orders').select('id,event_id,theme,amount,status,created_at').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(50);
+ if(error){$('#order-list').textContent='Riwayat transaksi tidak dapat dimuat: '+error.message;return;}
+ const names=new Map(eventCache.map(x=>[x.id,x.title]));
+ $('#order-list').innerHTML=(data||[]).map(o=>{
+ const status={pending:'Menunggu pembayaran',paid:'Lunas',cancelled:'Dibatalkan'}[o.status]||'Perlu pemeriksaan';
+ const date=new Date(o.created_at).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'});
+ return '<article class="order-card"><div class="checkout-line"><strong>'+safe(names.get(o.event_id)||o.theme)+'</strong><span class="tag">'+safe(status)+'</span></div><p class="muted">'+safe(date)+' · '+safe(o.id.slice(0,8).toUpperCase())+'</p><div class="checkout-line"><span>'+safe(o.theme)+'</span><strong>'+rupiah(o.amount)+'</strong></div></article>';
+ }).join('')||'<div class="empty">Belum ada transaksi. Pesanan akan tampil di sini setelah checkout tersedia.</div>';
+}
 async function checkoutEvent(button){
  if(!user)return;
  const id=button.dataset.checkout;button.disabled=true;const label=button.textContent;button.textContent='Menyiapkan checkout...';
@@ -103,10 +130,11 @@ async function editEvent(id){
 async function loadEvents(){
  const {data,error}=await db.from('events').select('id,title,slug,status,date,theme').eq('owner_id',user.id).order('created_at',{ascending:false});
  if(error){msg(error.message);return;}
+ eventCache=data||[];
  $('#editor-actions').hidden=!(data||[]).some(x=>x.status==='draft');
  const eventSummary=(data||[]).map(x=>'<div class="event-summary"><strong>'+safe(x.title||'Undangan')+'</strong><small>'+safe(x.status==='published'?'Aktif':'Draft')+'</small></div>').join('')||'<p class="muted">Belum ada undangan. Mulai dengan melihat katalog template.</p>';$('#guest-events').innerHTML=eventSummary;$('#wish-events').innerHTML=eventSummary;
- $('#event-list').innerHTML=(data||[]).map(x=>'<article class="event-card"><span class="tag">'+safe(x.status)+'</span><h3>'+safe(x.title)+'</h3><p class="muted">'+safe(x.theme)+' · '+safe(x.date||'Tanggal belum ditentukan')+'</p><small>Alamat: /'+safe(x.slug)+'</small><p>'+(x.status==='published'?'<a target="_blank" rel="noopener" href="/'+encodeURIComponent(x.slug)+'">Lihat undangan</a>':'Undangan belum dipublikasikan')+'</p>'+(x.status==='draft'?'<button class="outline" type="button" data-edit="'+safe(x.id)+'">Edit undangan</button><button class="outline" type="button" data-media="'+safe(x.id)+'">Foto & galeri</button><button class="primary" type="button" data-checkout="'+safe(x.id)+'">Bayar via Midtrans Sandbox</button>':'')+'</article>').join('')||'<div class="empty">Belum ada undangan. Setelah template tersedia, kamu bisa membuat draft pertamamu.</div>';
- document.querySelectorAll('[data-checkout]').forEach(b=>b.onclick=()=>checkoutEvent(b));document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editEvent(b.dataset.edit));document.querySelectorAll('[data-media]').forEach(b=>b.onclick=()=>openMedia(b.dataset.media));
+ $('#event-list').innerHTML=(data||[]).map(x=>'<article class="event-card"><span class="tag">'+safe(x.status)+'</span><h3>'+safe(x.title)+'</h3><p class="muted">'+safe(x.theme)+' · '+safe(x.date||'Tanggal belum ditentukan')+'</p><small>Alamat: /'+safe(x.slug)+'</small><p>'+(x.status==='published'?'<a target="_blank" rel="noopener" href="/'+encodeURIComponent(x.slug)+'">Lihat undangan</a>':'Undangan belum dipublikasikan')+'</p>'+(x.status==='draft'?'<button class="outline" type="button" data-edit="'+safe(x.id)+'">Edit undangan</button><button class="outline" type="button" data-media="'+safe(x.id)+'">Foto & galeri</button><button class="primary" type="button" data-checkout="'+safe(x.id)+'">Lihat checkout</button>':'')+'</article>').join('')||'<div class="empty">Belum ada undangan. Setelah template tersedia, kamu bisa membuat draft pertamamu.</div>';
+ document.querySelectorAll('[data-checkout]').forEach(b=>b.onclick=()=>openCheckout(b.dataset.checkout));document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editEvent(b.dataset.edit));document.querySelectorAll('[data-media]').forEach(b=>b.onclick=()=>openMedia(b.dataset.media));
 }
 
 
