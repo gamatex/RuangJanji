@@ -26,8 +26,8 @@ $('#signup').onclick=async()=>{
 $('#logout').onclick=()=>db.auth.signOut();
 const categories=['Semua','Art','Birthday','Deluxe','MiniMotion','Minisite','Motion',"Syar'i"];
 let activeCategory='Semua',searchTerm='';
-function showTab(tab){hideEditor();for(const id of ['home','catalog','events','account-view'])document.getElementById(id).hidden=id!==tab;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===tab);b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false');});window.scrollTo({top:0,behavior:'instant'});}
-document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+function showTab(tab){hideEditor();for(const id of ['home','catalog','events','guests','wishes','account-view'])document.getElementById(id).hidden=id!==tab;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===tab);b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false');});window.scrollTo({top:0,behavior:'instant'});}
+document.querySelectorAll('[data-tab],[data-go]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab||b.dataset.go));
 $('#explore').onclick=()=>showTab('catalog');
 function themeCategory(slug){const s=slug.toLowerCase();if(s.startsWith('mini-motion')||s.startsWith('minimotion'))return 'MiniMotion';if(s.startsWith('minisite'))return 'Minisite';if(s.startsWith('birthday'))return 'Birthday';if(s.startsWith('deluxe'))return 'Deluxe';if(s.startsWith('motion'))return 'Motion';if(s.startsWith('syari')||s.startsWith('syar'))return "Syar'i";return 'Art';}
 function categoryChips(){return categories.map(t=>'<button type="button" data-category="'+safe(t)+'" class="'+(t===activeCategory?'active':'')+'">'+safe(t)+'</button>').join('');}
@@ -68,6 +68,7 @@ async function loadEvents(){
  const {data,error}=await db.from('events').select('id,title,slug,status,date,theme').eq('owner_id',user.id).order('created_at',{ascending:false});
  if(error){msg(error.message);return;}
  $('#editor-actions').hidden=!(data||[]).some(x=>x.status==='draft');
+ const eventSummary=(data||[]).map(x=>'<div class="event-summary"><strong>'+safe(x.title||'Undangan')+'</strong><small>'+safe(x.status==='published'?'Aktif':'Draft')+'</small></div>').join('')||'<p class="muted">Belum ada undangan. Mulai dengan melihat katalog template.</p>';$('#guest-events').innerHTML=eventSummary;$('#wish-events').innerHTML=eventSummary;
  $('#event-list').innerHTML=(data||[]).map(x=>'<article class="event-card"><span class="tag">'+safe(x.status)+'</span><h3>'+safe(x.title)+'</h3><p class="muted">'+safe(x.theme)+' · '+safe(x.date||'Tanggal belum ditentukan')+'</p><small>Alamat: /'+safe(x.slug)+'</small><p>'+(x.status==='published'?'<a target="_blank" rel="noopener" href="/'+encodeURIComponent(x.slug)+'">Lihat undangan</a>':'Undangan belum dipublikasikan')+'</p>'+(x.status==='draft'?'<button class="outline" type="button" data-edit="'+safe(x.id)+'">Edit undangan</button><button class="outline" type="button" data-media="'+safe(x.id)+'">Foto & galeri</button>':'')+'</article>').join('')||'<div class="empty">Belum ada undangan. Setelah template tersedia, kamu bisa membuat draft pertamamu.</div>';
  document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editEvent(b.dataset.edit));document.querySelectorAll('[data-media]').forEach(b=>b.onclick=()=>openMedia(b.dataset.media));
 }
