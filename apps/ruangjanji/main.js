@@ -25,18 +25,23 @@ $('#signup').onclick=async()=>{
 $('#logout').onclick=()=>db.auth.signOut();
 const categories=['Semua','Art','Birthday','Deluxe','MiniMotion','Minisite','Motion',"Syar'i"];
 let activeCategory='Semua',searchTerm='';
-function showTab(tab){for(const id of ['home','catalog','events','account-view'])document.getElementById(id).hidden=id!==tab;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===tab);b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false');});window.scrollTo({top:0,behavior:'instant'});}
+function showTab(tab){hideEditor();for(const id of ['home','catalog','events','account-view'])document.getElementById(id).hidden=id!==tab;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===tab);b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false');});window.scrollTo({top:0,behavior:'instant'});}
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 $('#explore').onclick=()=>showTab('catalog');
 function themeCategory(slug){const s=slug.toLowerCase();if(s.startsWith('mini-motion')||s.startsWith('minimotion'))return 'MiniMotion';if(s.startsWith('minisite'))return 'Minisite';if(s.startsWith('birthday'))return 'Birthday';if(s.startsWith('deluxe'))return 'Deluxe';if(s.startsWith('motion'))return 'Motion';if(s.startsWith('syari')||s.startsWith('syar'))return "Syar'i";return 'Art';}
 function categoryChips(){return categories.map(t=>'<button type="button" data-category="'+safe(t)+'" class="'+(t===activeCategory?'active':'')+'">'+safe(t)+'</button>').join('');}
 function card(t){const name=t.slug.replace(/-/g,' ');const category=themeCategory(t.slug);return '<article class="theme-card"><div class="theme-art"><small>RUANGJANJI · '+safe(category.toUpperCase())+'</small><span>'+safe(name)+'</span><small>THE WEDDING INVITATION</small></div><div class="theme-info"><strong>'+safe(name)+'</strong><small>'+safe(category)+'</small><p>Rp '+Number(t.amount).toLocaleString('id-ID')+'</p><button type="button" '+(!t.enabled?'disabled':'data-theme="'+safe(t.slug)+'"')+'>'+(t.enabled?'Pilih template':'Segera tersedia')+'</button></div></article>';}
-function renderThemes(){const filtered=themes.filter(t=>(activeCategory==='Semua'||themeCategory(t.slug)===activeCategory)&&t.slug.toLowerCase().includes(searchTerm));$('#categories').innerHTML=categoryChips();$('#category-home').innerHTML=categoryChips();$('#theme-count').textContent=filtered.length+' desain';$('#themes').innerHTML=filtered.map(card).join('')||'<p class="empty">Template tidak ditemukan.</p>';$('#featured').innerHTML=themes.slice(0,4).map(card).join('');document.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{activeCategory=b.dataset.category;showTab('catalog');renderThemes();});document.querySelectorAll('[data-theme]').forEach(b=>b.onclick=()=>{$('#theme-select').value=b.dataset.theme;showTab('events');$('#event-form').scrollIntoView({behavior:'smooth'});});}
+function renderThemes(){const filtered=themes.filter(t=>(activeCategory==='Semua'||themeCategory(t.slug)===activeCategory)&&t.slug.toLowerCase().includes(searchTerm));$('#categories').innerHTML=categoryChips();$('#category-home').innerHTML=categoryChips();$('#theme-count').textContent=filtered.length+' desain';$('#themes').innerHTML=filtered.map(card).join('')||'<p class="empty">Template tidak ditemukan.</p>';$('#featured').innerHTML=themes.slice(0,4).map(card).join('');document.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{activeCategory=b.dataset.category;showTab('catalog');renderThemes();});document.querySelectorAll('[data-theme]').forEach(b=>b.onclick=()=>{$('#theme-select').value=b.dataset.theme;showTab('events');openEditor('all');});}
 $('#search').oninput=e=>{searchTerm=e.target.value.toLowerCase().trim();renderThemes();};$('#search-home').oninput=e=>{searchTerm=e.target.value.toLowerCase().trim();$('#search').value=e.target.value;showTab('catalog');renderThemes();};
 async function loadThemes(){const {data,error}=await db.from('theme_prices').select('slug,amount,enabled').order('slug');if(error){msg(error.message);return;}themes=data||[];$('#theme-select').innerHTML=themes.filter(t=>t.enabled).map(t=>'<option value="'+safe(t.slug)+'">'+safe(t.slug)+'</option>').join('')||'<option value="">Belum ada template yang dapat dipesan</option>';$('#save-event').disabled=!themes.some(t=>t.enabled);renderThemes();}
 const editFields=['title','groom','bride','slug','date','time','venue','address','story','theme'];
-function clearEditor(){const form=$('#event-form');form.reset();form.elements.event_id.value='';$('#save-event').textContent='Simpan draft undangan';$('#editor-title').textContent='Buat draft undangan';$('#cancel-edit').hidden=true;form.elements.slug.readOnly=false;form.elements.theme.disabled=false;}
+function clearEditor(){hideEditor();const form=$('#event-form');form.reset();form.elements.event_id.value='';$('#save-event').textContent='Simpan draft undangan';$('#editor-title').textContent='Buat draft undangan';$('#cancel-edit').hidden=true;form.elements.slug.readOnly=false;form.elements.theme.disabled=false;}
 $('#cancel-edit').onclick=clearEditor;
+$('#close-editor').onclick=hideEditor;
+function hideEditor(){$('#editor-sheet').hidden=true;document.body.classList.remove('editor-open');}
+function openEditor(group='all'){$('#editor-sheet').hidden=false;document.body.classList.add('editor-open');document.querySelectorAll('[data-editor-group]').forEach(el=>{el.hidden=group!=='all'&&el.dataset.editorGroup!==group;});$('#editor-title').textContent=group==='all'?'Buat draft undangan':({couple:'Data pengantin',event:'Acara & lokasi',story:'Kisah cinta',settings:'Pengaturan undangan'}[group]||'Edit undangan');}
+document.querySelectorAll('[data-editor]').forEach(b=>b.onclick=()=>openEditor(b.dataset.editor));
+
 $('#event-form').onsubmit=async e=>{
  e.preventDefault();if(!user)return;
  const form=e.currentTarget,f=new FormData(form),id=String(f.get('event_id')||'');
@@ -56,12 +61,13 @@ async function editEvent(id){
  if(error){msg(error.message);return;}if(data.status!=='draft'){msg('Hanya undangan draft yang dapat diedit pada tahap ini.');return;}
  const form=$('#event-form');for(const field of editFields){if(form.elements[field])form.elements[field].value=data[field]||'';}
  form.elements.event_id.value=data.id;form.elements.slug.readOnly=true;form.elements.theme.disabled=true;
- $('#save-event').textContent='Simpan perubahan';$('#editor-title').textContent='Edit draft undangan';$('#cancel-edit').hidden=false;
- showTab('events');form.scrollIntoView({behavior:'smooth',block:'start'});
+ $('#save-event').textContent='Simpan perubahan';$('#editor-actions').hidden=false;openEditor('all');$('#cancel-edit').hidden=false;
+ showTab('events');
 }
 async function loadEvents(){
  const {data,error}=await db.from('events').select('id,title,slug,status,date,theme').eq('owner_id',user.id).order('created_at',{ascending:false});
  if(error){msg(error.message);return;}
+ $('#editor-actions').hidden=!(data||[]).some(x=>x.status==='draft');
  $('#event-list').innerHTML=(data||[]).map(x=>'<article class="event-card"><span class="tag">'+safe(x.status)+'</span><h3>'+safe(x.title)+'</h3><p class="muted">'+safe(x.theme)+' · '+safe(x.date||'Tanggal belum ditentukan')+'</p><small>Alamat: /'+safe(x.slug)+'</small><p>'+(x.status==='published'?'<a target="_blank" rel="noopener" href="/'+encodeURIComponent(x.slug)+'">Lihat undangan</a>':'Undangan belum dipublikasikan')+'</p>'+(x.status==='draft'?'<button class="outline" type="button" data-edit="'+safe(x.id)+'">Edit undangan</button>':'')+'</article>').join('')||'<div class="empty">Belum ada undangan. Setelah template tersedia, kamu bisa membuat draft pertamamu.</div>';
  document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editEvent(b.dataset.edit));
 }
