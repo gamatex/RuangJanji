@@ -6,7 +6,7 @@ const key=SUPABASE_PUBLISHABLE_KEY;
 let db;
 if(!key){msg('Konfigurasi belum lengkap: isi publishable key Supabase pada config.js sebelum digunakan.');}else{db=createClient(SUPABASE_URL,requirePublishableKey(key));}
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let user=null, themes=[],mediaEventId=null, eventCache=[];
+let user=null, themes=[],mediaEventId=null, eventCache=[], orderCache=[],selectedOrderId=null;
 async function init(){db.auth.onAuthStateChange((_event,s)=>{setTimeout(()=>{void sessionChanged(s);},0);});const {data,error}=await db.auth.getSession();if(error)msg(error.message);await sessionChanged(data?.session);}
 async function sessionChanged(s){user=s?.user||null;const loggedIn=!!user;document.getElementById('auth').hidden=loggedIn;document.getElementById('app').hidden=!loggedIn;document.getElementById('bottom-nav').hidden=!loggedIn;if(!loggedIn)return;document.getElementById('account').textContent=user.email||'Pelanggan';msg('Dashboard siap.');try{await Promise.all([loadThemes(),loadEvents()]);await loadOrders();}catch(e){msg('Dashboard terbuka, tetapi data gagal dimuat: '+e.message);}}
 $('#login').onsubmit=async e=>{e.preventDefault();if(!db)return;const {data,error}=await db.auth.signInWithPassword({email:$('#email').value,password:$('#password').value});if(error){msg(error.message);return;}if(!data?.session){msg('Sesi belum tersedia. Silakan periksa konfirmasi email.');return;}await sessionChanged(data.session);};
@@ -26,7 +26,7 @@ $('#signup').onclick=async()=>{
 $('#logout').onclick=()=>db.auth.signOut();
 const categories=['Semua','Art','Birthday','Deluxe','MiniMotion','Minisite','Motion',"Syar'i"];
 let activeCategory='Semua',searchTerm='';
-function showTab(tab){closeThemeDetail();closeCheckout();hideEditor();for(const id of ['home','catalog','events','guests','wishes','account-view'])document.getElementById(id).hidden=id!==tab;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===tab);b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false');});window.scrollTo({top:0,behavior:'instant'});}
+function showTab(tab){closeThemeDetail();closeCheckout();closeOrderDetail();hideEditor();for(const id of ['home','catalog','events','guests','wishes','account-view'])document.getElementById(id).hidden=id!==tab;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===tab);b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false');});window.scrollTo({top:0,behavior:'instant'});}
 document.querySelectorAll('[data-tab],[data-go]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab||b.dataset.go));
 $('#explore').onclick=()=>showTab('catalog');
 function themeCategory(slug){const s=slug.toLowerCase();if(s.startsWith('mini-motion')||s.startsWith('minimotion'))return 'MiniMotion';if(s.startsWith('minisite'))return 'Minisite';if(s.startsWith('birthday'))return 'Birthday';if(s.startsWith('deluxe'))return 'Deluxe';if(s.startsWith('motion'))return 'Motion';if(s.startsWith('syari')||s.startsWith('syar'))return "Syar'i";return 'Art';}
@@ -99,13 +99,28 @@ async function loadOrders(){
  if(!user)return;
  const {data,error}=await db.from('orders').select('id,event_id,theme,amount,status,created_at').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(50);
  if(error){$('#order-list').textContent='Riwayat transaksi tidak dapat dimuat: '+error.message;return;}
+ orderCache=data||[];
  const names=new Map(eventCache.map(x=>[x.id,x.title]));
  $('#order-list').innerHTML=(data||[]).map(o=>{
  const status={pending:'Menunggu pembayaran',paid:'Lunas',cancelled:'Dibatalkan'}[o.status]||'Perlu pemeriksaan';
  const date=new Date(o.created_at).toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'});
- return '<article class="order-card"><div class="checkout-line"><strong>'+safe(names.get(o.event_id)||o.theme)+'</strong><span class="tag">'+safe(status)+'</span></div><p class="muted">'+safe(date)+' · '+safe(o.id.slice(0,8).toUpperCase())+'</p><div class="checkout-line"><span>'+safe(o.theme)+'</span><strong>'+rupiah(o.amount)+'</strong></div></article>';
+ return '<article class="order-card"><div class="checkout-line"><strong>'+safe(names.get(o.event_id)||o.theme)+'</strong><span class="tag">'+safe(status)+'</span></div><p class="muted">'+safe(date)+' · '+safe(o.id.slice(0,8).toUpperCase())+'</p><div class="checkout-line"><span>'+safe(o.theme)+'</span><strong>'+rupiah(o.amount)+'</strong></div><button class="outline order-detail-button" type="button" data-order-detail="'+safe(o.id)+'">Detail transaksi</button></article>';
  }).join('')||'<div class="empty">Belum ada transaksi. Pesanan akan tampil di sini setelah checkout tersedia.</div>';
+ document.querySelectorAll('[data-order-detail]').forEach(b=>b.onclick=()=>openOrderDetail(b.dataset.orderDetail));
 }
+function closeOrderDetail(){selectedOrderId=null;$('#order-detail-sheet').hidden=true;document.body.classList.remove('detail-open');}
+function openOrderDetail(id){
+ const o=orderCache.find(x=>x.id===id);if(!o)return;
+ selectedOrderId=id;
+ const event=eventCache.find(x=>x.id===o.event_id);
+ const status={pending:'Menunggu pembayaran',paid:'Pembayaran terverifikasi',cancelled:'Dibatalkan'}[o.status]||'Perlu pemeriksaan';
+ const row=(label,value)=>'<div class="checkout-line"><span>'+safe(label)+'</span><strong>'+safe(value)+'</strong></div>';
+ $('#order-detail-content').innerHTML=row('Nomor pesanan','RJ-'+o.id)+row('Undangan',event?.title||'Undangan')+row('Template',o.theme)+row('Dibuat',new Date(o.created_at).toLocaleString('id-ID',{dateStyle:'long',timeStyle:'short'}))+row('Status',status)+row('Total',rupiah(o.amount))+'<p class="muted">Status pembayaran bersumber dari database. Bukti pembayaran resmi tersedia setelah integrasi Midtrans diuji.</p>';
+ $('#order-detail-sheet').hidden=false;document.body.classList.add('detail-open');
+}
+$('#close-order-detail').onclick=closeOrderDetail;
+$('#order-detail-sheet').addEventListener('click',e=>{if(e.target.id==='order-detail-sheet')closeOrderDetail();});
+$('#order-detail-refresh').onclick=async()=>{const id=selectedOrderId;await loadOrders();if(id)openOrderDetail(id);};
 async function checkoutEvent(button){
  if(!user)return;
  const id=button.dataset.checkout;button.disabled=true;const label=button.textContent;button.textContent='Menyiapkan checkout...';
