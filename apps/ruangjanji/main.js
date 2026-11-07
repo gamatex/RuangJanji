@@ -3,12 +3,12 @@ import {SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,requirePublishableKey} from '../..
 const $=s=>document.querySelector(s), msg=t=>$('#message').textContent=t;
 const key=SUPABASE_PUBLISHABLE_KEY;
 let db;
-if(!key){msg('Konfigurasi belum lengkap: isi publishable key Supabase pada config.js sebelum digunakan.');}else{db=createClient(SUPABASE_URL,requirePublishableKey(key));init();}
+if(!key){msg('Konfigurasi belum lengkap: isi publishable key Supabase pada config.js sebelum digunakan.');}else{db=createClient(SUPABASE_URL,requirePublishableKey(key));}
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let user=null, themes=[];
-async function init(){const {data:{session},error}=await db.auth.getSession();if(error)msg(error.message);await sessionChanged(session);db.auth.onAuthStateChange((_event,s)=>{setTimeout(()=>{void sessionChanged(s);},0);});}
-async function sessionChanged(s){user=s?.user||null;$('#auth').hidden=!!user;$('#app').hidden=!user;if(!user)return;$('#account').textContent=user.email;try{await Promise.all([loadThemes(),loadEvents()]);}catch(e){msg('Dashboard terbuka, tetapi data gagal dimuat: '+e.message);}}
-$('#login').onsubmit=async e=>{e.preventDefault();if(!db)return;const {data,error}=await db.auth.signInWithPassword({email:$('#email').value,password:$('#password').value});if(error){msg(error.message);return;}if(!data?.session){msg('Sesi belum tersedia. Silakan periksa konfirmasi email.');return;}msg('Berhasil masuk. Memuat dashboard...');await sessionChanged(data.session);};
+async function init(){db.auth.onAuthStateChange((_event,s)=>{setTimeout(()=>{void sessionChanged(s);},0);});const {data,error}=await db.auth.getSession();if(error)msg(error.message);await sessionChanged(data?.session);}
+async function sessionChanged(s){user=s?.user||null;const loggedIn=!!user;document.getElementById('auth').hidden=loggedIn;document.getElementById('app').hidden=!loggedIn;if(!loggedIn)return;document.getElementById('account').textContent=user.email||'Pelanggan';msg('Dashboard siap.');try{await Promise.all([loadThemes(),loadEvents()]);}catch(e){msg('Dashboard terbuka, tetapi data gagal dimuat: '+e.message);}}
+$('#login').onsubmit=async e=>{e.preventDefault();if(!db)return;const {data,error}=await db.auth.signInWithPassword({email:$('#email').value,password:$('#password').value});if(error){msg(error.message);return;}if(!data?.session){msg('Sesi belum tersedia. Silakan periksa konfirmasi email.');return;}await sessionChanged(data.session);};
 $('#signup').onclick=async()=>{
   if(!db)return;
   const form=$('#login');
@@ -56,3 +56,5 @@ async function loadEvents(){
  $('#event-list').innerHTML=(data||[]).map(x=>'<article class="panel"><h3>'+safe(x.title)+'</h3><p>'+safe(x.slug)+' · '+safe(x.status)+' · '+safe(x.theme)+'</p><small>'+safe(x.date)+'</small><p>'+(x.status==='published'?'<a target="_blank" rel="noopener" href="/'+encodeURIComponent(x.slug)+'">Lihat undangan</a>':'Alamat disiapkan: /'+safe(x.slug)+' (belum dipublikasikan)')+'</p>'+(x.status==='draft'?'<button type="button" data-edit="'+safe(x.id)+'">Edit undangan</button>':'')+'</article>').join('')||'<p>Belum ada undangan.</p>';
  document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editEvent(b.dataset.edit));
 }
+
+if(db){void init();}
