@@ -35,17 +35,17 @@ function renderThemes(){const filtered=themes.filter(t=>(activeCategory==='Semua
 $('#search').oninput=e=>{searchTerm=e.target.value.toLowerCase().trim();renderThemes();};$('#search-home').oninput=e=>{searchTerm=e.target.value.toLowerCase().trim();$('#search').value=e.target.value;showTab('catalog');renderThemes();};
 async function loadThemes(){const {data,error}=await db.from('theme_prices').select('slug,amount,enabled').order('slug');if(error){msg(error.message);return;}themes=data||[];$('#theme-select').innerHTML=themes.filter(t=>t.enabled).map(t=>'<option value="'+safe(t.slug)+'">'+safe(t.slug)+'</option>').join('')||'<option value="">Belum ada template yang dapat dipesan</option>';$('#save-event').disabled=!themes.some(t=>t.enabled);renderThemes();}
 const editFields=['title','groom','bride','slug','date','time','venue','address','story','theme'];
-function clearEditor(){hideEditor();const form=$('#event-form');form.reset();form.elements.event_id.value='';$('#save-event').textContent='Simpan draft undangan';$('#editor-title').textContent='Buat draft undangan';$('#cancel-edit').hidden=true;form.elements.slug.readOnly=false;form.elements.theme.disabled=false;}
+function clearEditor(){hideEditor();mediaEventId=null;document.querySelectorAll('[data-editor-group]').forEach(el=>el.hidden=false);const form=$('#event-form');form.reset();form.elements.event_id.value='';$('#save-event').textContent='Simpan draft undangan';$('#editor-title').textContent='Buat draft undangan';$('#cancel-edit').hidden=true;form.elements.slug.readOnly=false;form.elements.theme.disabled=false;}
 $('#cancel-edit').onclick=clearEditor;
 $('#close-editor').onclick=hideEditor;
 function hideEditor(){$('#editor-sheet').hidden=true;$('#media-sheet').hidden=true;document.body.classList.remove('editor-open');}
-function openEditor(group='all'){$('#media-sheet').hidden=true;$('#editor-sheet').hidden=false;document.body.classList.add('editor-open');document.querySelectorAll('[data-editor-group]').forEach(el=>{el.hidden=group!=='all'&&el.dataset.editorGroup!==group;});$('#editor-title').textContent=group==='all'?'Buat draft undangan':({couple:'Data pengantin',event:'Acara & lokasi',story:'Kisah cinta',settings:'Pengaturan undangan'}[group]||'Edit undangan');}
+function openEditor(group='all'){if(group!=='all'&&!$('#event-form').elements.event_id.value){msg('Pilih undangan draft terlebih dahulu.');return;}$('#media-sheet').hidden=true;$('#editor-sheet').hidden=false;document.body.classList.add('editor-open');document.querySelectorAll('[data-editor-group]').forEach(el=>{el.hidden=group!=='all'&&el.dataset.editorGroup!==group;});$('#editor-title').textContent=group==='all'?'Buat draft undangan':({couple:'Data pengantin',event:'Acara & lokasi',story:'Kisah cinta',settings:'Pengaturan undangan'}[group]||'Edit undangan');}
 document.querySelectorAll('[data-editor]').forEach(b=>b.onclick=()=>openEditor(b.dataset.editor));
 
 $('#event-form').onsubmit=async e=>{
  e.preventDefault();if(!user)return;
  const form=e.currentTarget,f=new FormData(form),id=String(f.get('event_id')||'');
- const o={};for(const field of editFields)o[field]=String(f.get(field)||'').trim();
+ const o={};for(const field of editFields)o[field]=String(form.elements[field]?.value||'').trim();
  if(!/^[a-z0-9-]{3,80}$/.test(o.slug)){msg('Alamat harus 3–80 karakter, huruf kecil, angka atau tanda -');return;}
  const button=$('#save-event');button.disabled=true;
  try{
@@ -61,8 +61,7 @@ async function editEvent(id){
  if(error){msg(error.message);return;}if(data.status!=='draft'){msg('Hanya undangan draft yang dapat diedit pada tahap ini.');return;}
  const form=$('#event-form');for(const field of editFields){if(form.elements[field])form.elements[field].value=data[field]||'';}
  form.elements.event_id.value=data.id;form.elements.slug.readOnly=true;form.elements.theme.disabled=true;
- $('#save-event').textContent='Simpan perubahan';$('#editor-actions').hidden=false;mediaEventId=data.id;openEditor('all');$('#cancel-edit').hidden=false;
- showTab('events');
+ $('#save-event').textContent='Simpan perubahan';$('#editor-actions').hidden=false;mediaEventId=data.id;showTab('events');openEditor('all');$('#cancel-edit').hidden=false;
 }
 async function loadEvents(){
  const {data,error}=await db.from('events').select('id,title,slug,status,date,theme').eq('owner_id',user.id).order('created_at',{ascending:false});
