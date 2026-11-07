@@ -5,7 +5,7 @@ const key=SUPABASE_PUBLISHABLE_KEY;
 let db;
 if(!key){msg('Konfigurasi belum lengkap: isi publishable key Supabase pada config.js sebelum digunakan.');}else{db=createClient(SUPABASE_URL,requirePublishableKey(key));}
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let user=null, themes=[];
+let user=null, themes=[],mediaEventId=null;
 async function init(){db.auth.onAuthStateChange((_event,s)=>{setTimeout(()=>{void sessionChanged(s);},0);});const {data,error}=await db.auth.getSession();if(error)msg(error.message);await sessionChanged(data?.session);}
 async function sessionChanged(s){user=s?.user||null;const loggedIn=!!user;document.getElementById('auth').hidden=loggedIn;document.getElementById('app').hidden=!loggedIn;document.getElementById('bottom-nav').hidden=!loggedIn;if(!loggedIn)return;document.getElementById('account').textContent=user.email||'Pelanggan';msg('Dashboard siap.');try{await Promise.all([loadThemes(),loadEvents()]);}catch(e){msg('Dashboard terbuka, tetapi data gagal dimuat: '+e.message);}}
 $('#login').onsubmit=async e=>{e.preventDefault();if(!db)return;const {data,error}=await db.auth.signInWithPassword({email:$('#email').value,password:$('#password').value});if(error){msg(error.message);return;}if(!data?.session){msg('Sesi belum tersedia. Silakan periksa konfirmasi email.');return;}await sessionChanged(data.session);};
@@ -38,8 +38,8 @@ const editFields=['title','groom','bride','slug','date','time','venue','address'
 function clearEditor(){hideEditor();const form=$('#event-form');form.reset();form.elements.event_id.value='';$('#save-event').textContent='Simpan draft undangan';$('#editor-title').textContent='Buat draft undangan';$('#cancel-edit').hidden=true;form.elements.slug.readOnly=false;form.elements.theme.disabled=false;}
 $('#cancel-edit').onclick=clearEditor;
 $('#close-editor').onclick=hideEditor;
-function hideEditor(){$('#editor-sheet').hidden=true;document.body.classList.remove('editor-open');}
-function openEditor(group='all'){$('#editor-sheet').hidden=false;document.body.classList.add('editor-open');document.querySelectorAll('[data-editor-group]').forEach(el=>{el.hidden=group!=='all'&&el.dataset.editorGroup!==group;});$('#editor-title').textContent=group==='all'?'Buat draft undangan':({couple:'Data pengantin',event:'Acara & lokasi',story:'Kisah cinta',settings:'Pengaturan undangan'}[group]||'Edit undangan');}
+function hideEditor(){$('#editor-sheet').hidden=true;$('#media-sheet').hidden=true;document.body.classList.remove('editor-open');}
+function openEditor(group='all'){$('#media-sheet').hidden=true;$('#editor-sheet').hidden=false;document.body.classList.add('editor-open');document.querySelectorAll('[data-editor-group]').forEach(el=>{el.hidden=group!=='all'&&el.dataset.editorGroup!==group;});$('#editor-title').textContent=group==='all'?'Buat draft undangan':({couple:'Data pengantin',event:'Acara & lokasi',story:'Kisah cinta',settings:'Pengaturan undangan'}[group]||'Edit undangan');}
 document.querySelectorAll('[data-editor]').forEach(b=>b.onclick=()=>openEditor(b.dataset.editor));
 
 $('#event-form').onsubmit=async e=>{
@@ -61,15 +61,64 @@ async function editEvent(id){
  if(error){msg(error.message);return;}if(data.status!=='draft'){msg('Hanya undangan draft yang dapat diedit pada tahap ini.');return;}
  const form=$('#event-form');for(const field of editFields){if(form.elements[field])form.elements[field].value=data[field]||'';}
  form.elements.event_id.value=data.id;form.elements.slug.readOnly=true;form.elements.theme.disabled=true;
- $('#save-event').textContent='Simpan perubahan';$('#editor-actions').hidden=false;openEditor('all');$('#cancel-edit').hidden=false;
+ $('#save-event').textContent='Simpan perubahan';$('#editor-actions').hidden=false;mediaEventId=data.id;openEditor('all');$('#cancel-edit').hidden=false;
  showTab('events');
 }
 async function loadEvents(){
  const {data,error}=await db.from('events').select('id,title,slug,status,date,theme').eq('owner_id',user.id).order('created_at',{ascending:false});
  if(error){msg(error.message);return;}
  $('#editor-actions').hidden=!(data||[]).some(x=>x.status==='draft');
- $('#event-list').innerHTML=(data||[]).map(x=>'<article class="event-card"><span class="tag">'+safe(x.status)+'</span><h3>'+safe(x.title)+'</h3><p class="muted">'+safe(x.theme)+' · '+safe(x.date||'Tanggal belum ditentukan')+'</p><small>Alamat: /'+safe(x.slug)+'</small><p>'+(x.status==='published'?'<a target="_blank" rel="noopener" href="/'+encodeURIComponent(x.slug)+'">Lihat undangan</a>':'Undangan belum dipublikasikan')+'</p>'+(x.status==='draft'?'<button class="outline" type="button" data-edit="'+safe(x.id)+'">Edit undangan</button>':'')+'</article>').join('')||'<div class="empty">Belum ada undangan. Setelah template tersedia, kamu bisa membuat draft pertamamu.</div>';
- document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editEvent(b.dataset.edit));
+ $('#event-list').innerHTML=(data||[]).map(x=>'<article class="event-card"><span class="tag">'+safe(x.status)+'</span><h3>'+safe(x.title)+'</h3><p class="muted">'+safe(x.theme)+' · '+safe(x.date||'Tanggal belum ditentukan')+'</p><small>Alamat: /'+safe(x.slug)+'</small><p>'+(x.status==='published'?'<a target="_blank" rel="noopener" href="/'+encodeURIComponent(x.slug)+'">Lihat undangan</a>':'Undangan belum dipublikasikan')+'</p>'+(x.status==='draft'?'<button class="outline" type="button" data-edit="'+safe(x.id)+'">Edit undangan</button><button class="outline" type="button" data-media="'+safe(x.id)+'">Foto & galeri</button>':'')+'</article>').join('')||'<div class="empty">Belum ada undangan. Setelah template tersedia, kamu bisa membuat draft pertamamu.</div>';
+ document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editEvent(b.dataset.edit));document.querySelectorAll('[data-media]').forEach(b=>b.onclick=()=>openMedia(b.dataset.media));
+}
+
+
+const bucket='invitation-media';
+const publicPhoto=path=>db.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+$('#close-media').onclick=hideEditor;
+$('#open-media').onclick=()=>{if(!mediaEventId){msg('Pilih Edit undangan dari daftar draft terlebih dahulu.');return;}void openMedia(mediaEventId);};
+async function openMedia(eventId){
+ if(!user)return;
+ const {data,error}=await db.from('events').select('id,title,photo,status').eq('id',eventId).eq('owner_id',user.id).single();
+ if(error||data?.status!=='draft'){msg(error?.message||'Hanya draft milik Anda yang dapat diedit.');return;}
+ mediaEventId=data.id;$('#editor-sheet').hidden=true;$('#media-sheet').hidden=false;document.body.classList.add('editor-open');
+ $('#media-event-label').textContent=data.title;
+ $('#media-cover').innerHTML=data.photo&&/^https:\/\//.test(data.photo)?'<h3>Foto sampul</h3><img class="cover-preview" alt="Foto sampul" src="'+safe(data.photo)+'">':'<p class="muted">Belum ada foto sampul.</p>';
+ const {data:photos,error:galleryError}=await db.from('invitation_photos').select('id,storage_path').eq('event_id',eventId).order('created_at');
+ if(galleryError){msg(galleryError.message);return;}
+ $('#media-gallery').innerHTML=(photos||[]).map(p=>'<div class="gallery-item"><img alt="Foto galeri" loading="lazy" src="'+safe(publicPhoto(p.storage_path))+'"><button type="button" data-delete-photo="'+safe(p.id)+'">Hapus</button></div>').join('')||'<p class="muted">Belum ada foto galeri.</p>';
+ document.querySelectorAll('[data-delete-photo]').forEach(b=>b.onclick=()=>removeGalleryPhoto(b.dataset.deletePhoto));
+}
+async function uploadMedia(kind){
+ if(!user||!mediaEventId){msg('Pilih draft undangan terlebih dahulu.');return;}
+ const input=$(kind==='cover'?'#cover-file':'#gallery-file'),file=input.files?.[0];
+ if(!file){msg('Pilih foto terlebih dahulu.');return;}
+ if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>5*1024*1024){msg('Gunakan JPG, PNG atau WebP maksimal 5 MB.');return;}
+ const {data:event,error:checkError}=await db.from('events').select('id,photo,status').eq('id',mediaEventId).eq('owner_id',user.id).single();
+ if(checkError||event?.status!=='draft'){msg('Draft tidak tersedia atau bukan milik Anda.');return;}
+ const button=$(kind==='cover'?'#upload-cover':'#upload-gallery');button.disabled=true;
+ try{
+  const ext=file.type==='image/png'?'png':file.type==='image/webp'?'webp':'jpg';
+  const path=user.id+'/'+mediaEventId+'/'+crypto.randomUUID()+'.'+ext;
+  const {error:uploadError}=await db.storage.from(bucket).upload(path,file,{contentType:file.type,upsert:false});
+  if(uploadError){msg(uploadError.message+' — Pastikan WhatsApp telah terverifikasi.');return;}
+  let error;
+  if(kind==='cover'){({error}=await db.from('events').update({photo:publicPhoto(path)}).eq('id',mediaEventId).eq('owner_id',user.id).eq('status','draft'));}
+  else{({error}=await db.from('invitation_photos').insert({event_id:mediaEventId,owner_id:user.id,storage_path:path}));}
+  if(error){await db.storage.from(bucket).remove([path]);msg('Gagal menyimpan foto: '+error.message);return;}
+  input.value='';msg('Foto berhasil diunggah.');await openMedia(mediaEventId);
+ }finally{button.disabled=false;}
+}
+$('#upload-cover').onclick=()=>uploadMedia('cover');
+$('#upload-gallery').onclick=()=>uploadMedia('gallery');
+async function removeGalleryPhoto(id){
+ const {data,error}=await db.from('invitation_photos').select('id,storage_path').eq('id',id).eq('event_id',mediaEventId).eq('owner_id',user.id).single();
+ if(error||!data){msg('Foto tidak ditemukan.');return;}
+ const {error:storageError}=await db.storage.from(bucket).remove([data.storage_path]);
+ if(storageError){msg(storageError.message);return;}
+ const {error:deleteError}=await db.from('invitation_photos').delete().eq('id',id).eq('owner_id',user.id);
+ if(deleteError){msg(deleteError.message);return;}
+ msg('Foto galeri dihapus.');await openMedia(mediaEventId);
 }
 
 if(db){void init();}
