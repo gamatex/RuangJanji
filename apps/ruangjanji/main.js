@@ -26,7 +26,7 @@ $('#signup').onclick=async()=>{
 $('#logout').onclick=()=>db.auth.signOut();
 const categories=['Semua','Art','Birthday','Deluxe','MiniMotion','Minisite','Motion',"Syar'i"];
 let activeCategory='Semua',searchTerm='';
-function showTab(tab){closeThemeDetail();closeCheckout();closeOrderDetail();closeEventActions();closeDeleteEvent();hideEditor();for(const id of ['home','catalog','events','guests','wishes','account-view'])document.getElementById(id).hidden=id!==tab;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===tab);b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false');});window.scrollTo({top:0,behavior:'instant'});}
+function showTab(tab){closeThemeDetail();closeCheckout();closeOrderDetail();closeEventActions();closeDeleteEvent();closeInvitationSettings();hideEditor();for(const id of ['home','catalog','events','guests','wishes','account-view'])document.getElementById(id).hidden=id!==tab;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===tab);b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false');});window.scrollTo({top:0,behavior:'instant'});}
 document.querySelectorAll('[data-tab],[data-go]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab||b.dataset.go));
 $('#explore').onclick=()=>showTab('catalog');
 function themeCategory(slug){const s=slug.toLowerCase();if(s.startsWith('mini-motion')||s.startsWith('minimotion'))return 'MiniMotion';if(s.startsWith('minisite'))return 'Minisite';if(s.startsWith('birthday'))return 'Birthday';if(s.startsWith('deluxe'))return 'Deluxe';if(s.startsWith('motion'))return 'Motion';if(s.startsWith('syari')||s.startsWith('syar'))return "Syar'i";return 'Art';}
@@ -138,9 +138,39 @@ document.querySelectorAll('[data-event-action]').forEach(b=>b.onclick=async()=>{
  if(a==='preview'){window.open('/theme-preview.html?tema='+encodeURIComponent(e.theme),'_blank','noopener');return;}
  if(a==='edit'){if(e.status!=='draft'){msg('Pengeditan undangan terbit memerlukan alur khusus.');return;}await editEvent(id);return;}
  if(a==='addon'){msg('Add-on belum tersedia. Tidak ada biaya yang diproses.');return;}
- if(a==='settings'){msg('Pengaturan RSVP dan akses undangan sedang disiapkan.');return;}
+ if(a==='settings'){await openInvitationSettings(id);return;}
  if(a==='guests'||a==='rsvp')msg('Ekspor Excel belum tersedia. Tombol ini belum mengunduh data.');
 });
+let settingsEventId=null;
+function closeInvitationSettings(){$('#invitation-settings-sheet').hidden=true;settingsEventId=null;}
+$('#close-invitation-settings').onclick=closeInvitationSettings;
+$('#invitation-settings-sheet').addEventListener('click',e=>{if(e.target.id==='invitation-settings-sheet')closeInvitationSettings();});
+async function openInvitationSettings(id){
+ const e=eventCache.find(x=>x.id===id);if(!e)return;
+ if(e.status!=='draft'){msg('Pengaturan undangan terbit belum tersedia.');return;}
+ settingsEventId=id;$('#settings-message').textContent='Memuat pengaturan...';
+ $('#invitation-settings-sheet').hidden=false;
+ const {data,error}=await db.from('invitation_settings').select('show_wishes,max_rsvp,rsvp_deadline,registered_guests_only').eq('event_id',id).maybeSingle();
+ if(settingsEventId!==id)return;
+ if(error){$('#settings-message').textContent=error.message;return;}
+ $('#setting-wishes').checked=data?.show_wishes??true;
+ $('#setting-max-rsvp').value=data?.max_rsvp??5;
+ $('#setting-deadline').value=data?.rsvp_deadline||'';
+ $('#setting-registered').checked=data?.registered_guests_only??false;
+ $('#setting-registered').disabled=true;
+ $('#settings-message').textContent='Pengaturan akses khusus tamu terdaftar belum aktif. Pengaturan RSVP tersimpan sebagai preferensi sampai formulir RSVP publik dihubungkan.';
+}
+$('#invitation-settings-form').onsubmit=async e=>{
+ e.preventDefault();const id=settingsEventId,ev=eventCache.find(x=>x.id===id);if(!ev||ev.status!=='draft')return;
+ const max=Number($('#setting-max-rsvp').value),deadline=$('#setting-deadline').value;
+ if(!Number.isInteger(max)||max<1||max>20){$('#settings-message').textContent='Batas RSVP harus 1 sampai 20.';return;}
+ const b=$('#save-invitation-settings');b.disabled=true;$('#settings-message').textContent='Menyimpan...';
+ try{
+ const payload={event_id:id,owner_id:user.id,show_wishes:$('#setting-wishes').checked,max_rsvp:max,rsvp_deadline:deadline||null,registered_guests_only:false,updated_at:new Date().toISOString()};
+ const {error}=await db.from('invitation_settings').upsert(payload,{onConflict:'event_id'});
+ $('#settings-message').textContent=error?'Gagal menyimpan: '+error.message:'Pengaturan draft tersimpan. Aturan publik akan diterapkan pada tahap integrasi RSVP.';
+ }catch(error){$('#settings-message').textContent=error.message;}finally{b.disabled=false;}
+};
 async function checkoutEvent(button){
  if(!user)return;
  const id=button.dataset.checkout;button.disabled=true;const label=button.textContent;button.textContent='Menyiapkan checkout...';
