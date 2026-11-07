@@ -26,13 +26,35 @@ $('#signup').onclick=async()=>{
 $('#logout').onclick=()=>db.auth.signOut();
 const categories=['Semua','Art','Birthday','Deluxe','MiniMotion','Minisite','Motion',"Syar'i"];
 let activeCategory='Semua',searchTerm='';
-function showTab(tab){hideEditor();for(const id of ['home','catalog','events','guests','wishes','account-view'])document.getElementById(id).hidden=id!==tab;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===tab);b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false');});window.scrollTo({top:0,behavior:'instant'});}
+function showTab(tab){closeThemeDetail();hideEditor();for(const id of ['home','catalog','events','guests','wishes','account-view'])document.getElementById(id).hidden=id!==tab;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===tab);b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false');});window.scrollTo({top:0,behavior:'instant'});}
 document.querySelectorAll('[data-tab],[data-go]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab||b.dataset.go));
 $('#explore').onclick=()=>showTab('catalog');
 function themeCategory(slug){const s=slug.toLowerCase();if(s.startsWith('mini-motion')||s.startsWith('minimotion'))return 'MiniMotion';if(s.startsWith('minisite'))return 'Minisite';if(s.startsWith('birthday'))return 'Birthday';if(s.startsWith('deluxe'))return 'Deluxe';if(s.startsWith('motion'))return 'Motion';if(s.startsWith('syari')||s.startsWith('syar'))return "Syar'i";return 'Art';}
 function categoryChips(){return categories.map(t=>'<button type="button" data-category="'+safe(t)+'" class="'+(t===activeCategory?'active':'')+'">'+safe(t)+'</button>').join('');}
 function card(t){const name=t.slug.replace(/-/g,' ');const category=themeCategory(t.slug);const image=previewImages[t.slug];return '<article class="theme-card"><div class="theme-art">'+(image?'<img loading="lazy" alt="Pratinjau '+safe(name)+'" src="/'+safe(image)+'">':'<span>'+safe(name)+'</span>')+'</div><div class="theme-info"><strong>'+safe(name)+'</strong><small>'+safe(category)+'</small><p>Rp '+Number(t.amount).toLocaleString('id-ID')+'</p><div class="card-actions"><a class="preview-link" href="/theme-preview.html?tema='+encodeURIComponent(t.slug)+'" target="_blank" rel="noopener">Lihat demo</a><button type="button" '+(!t.enabled?'disabled':'data-theme="'+safe(t.slug)+'"')+'>'+(t.enabled?'Pilih tema':'Belum tersedia')+'</button></div></div></article>';}
-function renderThemes(){const filtered=themes.filter(t=>(activeCategory==='Semua'||themeCategory(t.slug)===activeCategory)&&t.slug.toLowerCase().includes(searchTerm));$('#categories').innerHTML=categoryChips();$('#category-home').innerHTML=categoryChips();$('#theme-count').textContent=filtered.length+' desain';$('#themes').innerHTML=filtered.map(card).join('')||'<p class="empty">Template tidak ditemukan.</p>';$('#featured').innerHTML=themes.slice(0,4).map(card).join('');document.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{activeCategory=b.dataset.category;showTab('catalog');renderThemes();});document.querySelectorAll('[data-theme]').forEach(b=>b.onclick=()=>{$('#theme-select').value=b.dataset.theme;showTab('events');openEditor('all');});}
+function renderThemes(){const filtered=themes.filter(t=>(activeCategory==='Semua'||themeCategory(t.slug)===activeCategory)&&t.slug.toLowerCase().includes(searchTerm));$('#categories').innerHTML=categoryChips();$('#category-home').innerHTML=categoryChips();$('#theme-count').textContent=filtered.length+' desain';$('#themes').innerHTML=filtered.map(card).join('')||'<p class="empty">Template tidak ditemukan.</p>';$('#featured').innerHTML=themes.slice(0,4).map(card).join('');document.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{activeCategory=b.dataset.category;showTab('catalog');renderThemes();});document.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>openThemeDetail(b.dataset.detail));}
+let detailSlug=null;
+function closeThemeDetail(){const el=$('#theme-detail');if(el)el.hidden=true;detailSlug=null;document.body.classList.remove('detail-open');}
+function openThemeDetail(slug){
+ const theme=themes.find(t=>t.slug===slug);if(!theme)return;
+ detailSlug=slug;
+ const name=slug.replace(/-/g,' '),image=previewImages[slug];
+ $('#detail-name').textContent=name;
+ $('#detail-title').textContent='Detail template';
+ $('#detail-category').textContent=themeCategory(slug);
+ $('#detail-price').textContent='Rp '+Number(theme.amount).toLocaleString('id-ID');
+ $('#detail-status').textContent=theme.enabled?'Template dapat dipilih untuk membuat undangan.':'Template belum dibuka untuk pemesanan. Kamu tetap dapat melihat demonya.';
+ $('#detail-image').hidden=!image;
+ if(image)$('#detail-image').src='/'+image;
+ $('#detail-demo').href='/theme-preview.html?tema='+encodeURIComponent(slug);
+ $('#detail-select').disabled=!theme.enabled;
+ $('#detail-select').textContent=theme.enabled?'Pilih template':'Belum tersedia';
+ $('#theme-detail').hidden=false;document.body.classList.add('detail-open');
+}
+$('#close-detail').onclick=closeThemeDetail;
+$('#theme-detail').addEventListener('click',e=>{if(e.target.id==='theme-detail')closeThemeDetail();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeThemeDetail();});
+$('#detail-select').onclick=()=>{if(!detailSlug)return;const theme=themes.find(t=>t.slug===detailSlug);if(!theme?.enabled)return;$('#theme-select').value=detailSlug;showTab('events');openEditor('all');};
 $('#search').oninput=e=>{searchTerm=e.target.value.toLowerCase().trim();renderThemes();};$('#search-home').oninput=e=>{searchTerm=e.target.value.toLowerCase().trim();$('#search').value=e.target.value;showTab('catalog');renderThemes();};
 async function loadThemes(){const {data,error}=await db.from('theme_prices').select('slug,amount,enabled').order('slug');if(error){msg(error.message);return;}themes=data||[];$('#theme-select').innerHTML=themes.filter(t=>t.enabled).map(t=>'<option value="'+safe(t.slug)+'">'+safe(t.slug)+'</option>').join('')||'<option value="">Belum ada template yang dapat dipesan</option>';$('#save-event').disabled=!themes.some(t=>t.enabled);renderThemes();}
 const editFields=['title','groom','bride','slug','date','time','venue','address','story','theme'];
