@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="id">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Pesan Undangan · Ruang Janji</title><link rel="stylesheet" href="checkout.css"><script src="catalog-data.js" defer></script><script src="order-catalog.js" defer></script><script src="checkout.js" defer></script><link rel="stylesheet" href="brand-palette.css"></head>
+<body>
+<header><a class="brand" href="./">✿ Ruang Janji</a><a href="./#tema">← Kembali ke tema</a></header>
+<main>
+<div class="intro"><span class="eyebrow">HARI BAHAGIA, DIMULAI DI SINI</span><h1>Pesan undanganmu.</h1><p>Pilih tema dan layanan yang sesuai, lalu periksa rincian pesanan.</p><p class="notice">Pratinjau pemesanan · Semua harga masih contoh. Pesanan tersimpan di browser ini.</p></div>
+<form id="order">
+<div class="steps">
+<section class="card">
+<div class="heading"><span>01</span><h2>Detail pesanan</h2></div>
+<label for="theme">Tema undangan</label>
+<select id="theme" name="tema"><option value="jawa">Motion Jawa</option><option value="minang">Minang</option><option value="petualangan">Petualangan Interaktif</option></select>
+<a id="preview" class="text-link" href="motion-jawa.html" target="_blank" rel="noopener">Lihat demo tema ↗</a>
+<dl class="specs"><div><dt>Harga paket contoh</dt><dd id="package-price">Rp158.000</dd></div><div><dt>Masa aktif undangan</dt><dd>1 tahun</dd></div><div><dt>Kuota undangan</dt><dd>1 acara</dd></div><div><dt>Harga perpanjang contoh</dt><dd>Rp79.000 / tahun</dd></div></dl>
+</section>
+<section class="card"><div class="heading"><span>02</span><h2>Layanan tambahan</h2></div>
+<fieldset><legend>Pengerjaan</legend>
+<label class="choice"><input type="radio" name="pengerjaan" value="mandiri" checked><span><b>Isi sendiri</b><small>Lengkapi data dan foto melalui editor.</small></span><strong>Termasuk</strong></label>
+<label class="choice"><input type="radio" name="pengerjaan" value="reguler"><span><b>Terima beres</b><small>Contoh estimasi 3 × 24 jam setelah data lengkap.</small></span><strong>Rp30.000</strong></label>
+<label class="choice"><input type="radio" name="pengerjaan" value="express"><span><b>Terima beres express</b><small>Contoh estimasi 1 × 24 jam setelah data lengkap.</small></span><strong>Rp50.000</strong></label>
+</fieldset>
+<fieldset><legend>Fitur tambahan</legend><div id="addons"></div></fieldset>
+<fieldset><legend>Domain undangan</legend><label for="domain" class="sr-only">Pilihan domain</label><select id="domain" name="domain"><option value="bawaan">Tautan bawaan · termasuk</option><option value="myid">Domain .my.id · Rp100.000</option><option value="com">Domain .com · Rp250.000</option></select></fieldset>
+</section>
+<section class="card"><div class="heading"><span>03</span><h2>Detail pemesan</h2></div>
+<label for="name">Nama lengkap</label><input id="name" name="nama" autocomplete="name" required maxlength="100" placeholder="Nama pemesan">
+<div class="two"><div><label for="email">Email aktif</label><input type="email" id="email" name="email" autocomplete="email" required maxlength="160" placeholder="nama@email.com"></div><div><label for="phone">Nomor WhatsApp</label><input id="phone" name="whatsapp" autocomplete="tel" inputmode="tel" type="tel" pattern="[+0-9 ()-]{8,24}" required maxlength="24" placeholder="08xxxxxxxxxx"></div></div>
+<div class="two"><div><label for="couple">Nama pasangan</label><input id="couple" name="pasangan" required maxlength="100" placeholder="Arga & Laras"></div><div><label for="date">Tanggal acara</label><input id="date" name="tanggal" required type="date"></div></div>
+<label for="notes">Catatan <small>(opsional)</small></label><textarea id="notes" name="catatan" rows="3" maxlength="700" placeholder="Tuliskan kebutuhan acara Anda"></textarea>
+<p class="hint">Data contoh yang diisi disimpan di perangkat ini saat pesanan dibuat.</p>
+</section>
+<section class="card"><div class="heading"><span>04</span><h2>Metode pembayaran</h2></div>
+<fieldset><legend>Pilih metode untuk dicatat pada pesanan</legend><div class="two"><label class="payment"><input type="radio" name="pembayaran" value="transfer" required checked><span>▤ <b>Transfer bank</b></span></label><label class="payment"><input type="radio" name="pembayaran" value="qris" required><span>▦ <b>QRIS</b></span></label></div></fieldset>
+<p class="hint">Instruksi transfer dan QR pembayaran tersedia setelah layanan pembayaran dikonfigurasi.</p>
+</section>
+<section class="card"><div class="heading"><span>05</span><h2>Ketentuan pemesanan</h2></div>
+<details><summary>Isi sendiri dan layanan terima beres</summary><p>Isi sendiri menggunakan editor undangan. Layanan terima beres dihitung setelah nama, jadwal, lokasi, dan foto lengkap diterima. Estimasi waktu serta harga di halaman ini masih berupa contoh.</p></details>
+<details><summary>Domain, masa aktif, dan fitur tambahan</summary><p>Domain menyesuaikan ketersediaan nama. Masa aktif dan fitur tambahan mengikuti pilihan pada ringkasan. Ketersediaan layanan akan ditetapkan saat pemesanan resmi diaktifkan.</p></details>
+<label class="check"><input id="agree" type="checkbox" required><span>Saya telah memeriksa pilihan dan data pada pesanan contoh ini.</span></label>
+</section>
+</div>
+<aside class="summary card"><span class="eyebrow">PILIHAN UNTUK ACARA ANDA</span><h2>Ringkasan pesanan</h2><p id="summary-theme">Motion Jawa</p><div class="coupon"><label for="coupon">Kode kupon contoh</label><div><input id="coupon" autocomplete="off" maxlength="24" placeholder="Contoh SY50"><button id="apply" type="button">Terapkan</button></div><p id="coupon-status" role="status">SY50 memberi diskon contoh 50% harga paket.</p></div>
+<div id="lines"></div><div class="total"><span>Total contoh</span><strong id="total"></strong></div><p class="hint">Kupon berlaku pada harga paket. Layanan tambahan dihitung terpisah.</p><button class="primary" type="submit">Simpan pesanan contoh →</button><p id="submit-status" role="status"></p><small class="hint">Pesanan berstatus draf, menunggu pemeriksaan.</small></aside>
+</form>
+
+</main><footer>✿ Ruang Janji · Setiap cerita layak dirayakan.</footer>
+</body></html>

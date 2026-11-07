@@ -1,0 +1,94 @@
+:root{
+  --terracotta:#C86D51;
+  --warm-sand:#F5EBE6;
+  --espresso:#2C221E;
+  --sage:#A3B18B;
+  --ink:var(--espresso);
+  --green:var(--terracotta);
+  --paper:var(--warm-sand);
+  --muted:#6C574D;
+  --line:#D9C5BA;
+  --kv-ink:var(--espresso);
+  --kv-ink-deep:var(--espresso);
+  --kv-olive:var(--sage);
+  --kv-gold:var(--terracotta);
+  --kv-gold-deep:#91462F;
+  --kv-paper:var(--warm-sand);
+  --kv-card:#FAF4F0;
+  --kv-line:rgba(44,34,30,.17);
+  --kv-muted:#6C574D;
+  --kv-on-ink:var(--warm-sand);
+  --kv-on-ink-muted:#DFCDC2;
+  --kv-on-ink-line:rgba(245,235,230,.25);
+}
+body{background:var(--warm-sand);color:var(--espresso)}
+.kv-header{background:#2C221EF5;color:var(--warm-sand)}
+.kv-strip{background:var(--sage);color:var(--espresso)}
+.kv-strip__link,.kv-strip__link:hover{color:var(--espresso)}
+.kv-strip__badge{background:var(--terracotta);color:var(--espresso)}
+.kv-hero{background:var(--warm-sand);color:var(--espresso)}
+.kv-hero :is(.kv-h1,.kv-lead,.kv-hero__intro,.kv-hero__cats,.kv-hero__cats a){color:var(--espresso)}
+.kv-hero :is(.kv-eyebrow,.kv-hero__eyebrow){color:#91462F}
+.kv-hero .kv-btn--ghost{background:transparent;border-color:var(--espresso);color:var(--espresso)}
+.kv-hero .kv-btn--ghost:hover{background:#A3B18B40}
+.kv-hero .kv-btn--quiet{color:var(--espresso)}
+.kv-hero .kv-hero__fade{background:linear-gradient(transparent,var(--warm-sand))}
+.kv-btn--gold,.kv-btn--ink{background:var(--terracotta);color:var(--espresso);border-color:var(--terracotta)}
+.kv-btn--gold:hover,.kv-btn--ink:hover{background:#D88C75;color:var(--espresso);border-color:#D88C75}
+.kv-btn--line{background:#FAF4F0;color:var(--espresso);border-color:var(--kv-line)}
+.kv-chip{background:#FAF4F0;color:var(--espresso);border-color:#A3B18B}
+.kv-chip span{background:#A3B18B55;color:var(--espresso)}
+.kv-chip[aria-selected=true]{background:var(--sage);border-color:var(--sage);color:var(--espresso)}
+.kv-chip[aria-selected=true] span{background:var(--warm-sand);color:var(--espresso)}
+.kv-card__badge,.kv-card__off{background:var(--terracotta);color:var(--espresso)}
+.catalog-state{color:#6C574D}
+.kv-catnote{background:#A3B18B35;color:var(--espresso)}
+.kv-app__card{background:var(--sage);color:var(--espresso)}
+.kv-app__card :is(.kv-lead,.kv-app__note,.kv-eyebrow){color:var(--espresso)}
+.kv-footer{background:var(--espresso)}
+.kv-footer a:hover{color:var(--terracotta)}
+.kv-tabbar{background:var(--warm-sand);color:var(--espresso);border-color:var(--line)}
+.kv-tabbar__item,.kv-tabbar__item:hover{color:var(--espresso)}
+.kv-tabbar__item.is-active{background:#A3B18B45;color:var(--espresso)}
+.kv-eyebrow--gold{color:#91462F}
+#catalog-info{background:var(--warm-sand);color:var(--espresso);border-color:var(--line)}
+#catalog-info::backdrop{background:#2C221EB8}
+header:not(.kv-header){border-color:var(--line)}
+header:not(.kv-header) .brand{color:var(--espresso)}
+.eyebrow{color:#91462F}
+.card,#invoice,#empty{background:#FAF4F0;border-color:var(--line)}
+.notice{background:#A3B18B30;color:var(--espresso);border-color:#A3B18B}
+.heading>span{background:#A3B18B40;border-color:var(--sage);color:var(--espresso)}
+.choice,.payment{border-color:#CDB9AC}
+.choice:has(:checked),.payment:has(:checked){background:#A3B18B35;border-color:#70815A}
+input,select,textarea{background:#FFF9F5;border-color:#CDB9AC;color:var(--espresso)}
+input[type=checkbox],input[type=radio]{accent-color:#91462F}
+input:focus,select:focus,textarea:focus{outline-color:#91462F}
+button,.button{background:#A3B18B45;color:var(--espresso);border-color:#97A57F}
+.primary,.confirm{background:var(--terracotta);color:var(--espresso);border-color:var(--terracotta)}
+.primary:hover,.confirm:hover{background:#D88C75;color:var(--espresso)}
+.summary .total{border-color:var(--line)}
+.status{background:#A3B18B55;color:var(--espresso)}
+.invoice .brand,#invoice .brand{color:#91462F}
+#discount{color:#91462F}
+#addon-total{color:#53613F}
+#invoice .right{border-color:var(--line)}
+#invoice :is(td,th){border-color:#DDCBC0}
+#invoice .grand{border-color:var(--line)}
+#invoice .notice{background:transparent;color:#6C574D}
+#invoice .actions{border-color:var(--line)}
+:where(a,button):focus-visible{outline:2px solid #91462F;outline-offset:3px}
+.kv-hero .kv-hero__desc{color:#6C574D}
+.kv-nav a:hover,.kv-nav a[aria-current=page]{color:var(--warm-sand)}
+
+/* Keep order actions legible across catalog cards and payment screens. */
+.kv .kv-btn--ink,
+.kv .kv-btn--gold,
+.kv .kv-btn--ink:hover,
+.kv .kv-btn--gold:hover,
+.primary,
+.primary:hover,
+.confirm,
+.confirm:hover{
+  color:#FFFFFF;
+}

@@ -1,0 +1,26 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Invoice · Ruang Janji</title><link rel="stylesheet" href="invoice.css"><script src="catalog-data.js" defer></script><script src="order-catalog.js" defer></script><script src="invoice.js" defer></script><link rel="stylesheet" href="brand-palette.css"></head><body>
+<main>
+<section id="empty" hidden><a href="./" class="brand">✿ Ruang Janji</a><h1>Invoice belum tersedia</h1><p>Invoice dapat dibuka di browser tempat pesanan contoh dibuat.</p><a class="button" href="checkout.html">Buat pesanan contoh</a></section>
+<article id="invoice" hidden>
+<div class="left">
+<a href="./" class="brand">✿ Ruang Janji</a>
+<h1 id="number"></h1>
+<div class="two"><div><span class="label">Tanggal terbit</span><strong id="issued"></strong></div><div><span class="label">Batas waktu contoh</span><strong id="due"></strong></div></div>
+<div class="two addresses"><div><span class="label">Ditujukan kepada</span><strong id="customer"></strong><span id="email"></span></div><div><span class="label">Diterbitkan oleh</span><strong>Ruang Janji</strong><span>Undangan pernikahan digital</span></div></div>
+<table><thead><tr><th>Produk</th><th>Harga</th></tr></thead><tbody><tr><td id="product"></td><td id="base"></td></tr></tbody></table>
+<dl class="totals"><div><dt>Subtotal</dt><dd id="subtotal"></dd></div><div id="discount-row"><dt id="discount-label">Diskon</dt><dd id="discount"></dd></div><div><dt>Layanan tambahan</dt><dd id="addon-total"></dd></div><div class="grand"><dt>Total contoh</dt><dd id="total"></dd></div></dl>
+<div class="notice">Invoice contoh · Data tersimpan di browser ini.</div>
+</div>
+<div class="right">
+<div class="status-row"><span>Status</span><strong class="status">Draf · belum diverifikasi</strong></div>
+<h2>Detail pesanan</h2><dl class="details" id="details"></dl>
+<h2>Metode pembayaran</h2><dl class="details"><div><dt>Metode pilihan</dt><dd id="payment"></dd></div></dl>
+<p class="label instructions">Instruksi pembayaran</p><p>Rekening tujuan dan QRIS Ruang Janji belum dikonfigurasi.</p>
+<p class="help">Konfirmasi dapat dikirim kepada admin melalui WhatsApp. Lampirkan bukti pembayaran di percakapan jika sudah melakukan transfer.</p>
+<a id="whatsapp" class="button confirm" target="_blank" rel="noopener noreferrer">Konfirmasi pembayaran</a>
+<p class="phone">WhatsApp admin · 0817610343</p>
+<p class="help">WhatsApp membuka pesan yang sudah diisi. Kirim pesan dari aplikasi WhatsApp Anda.</p>
+</div>
+<div class="actions"><a id="edit" href="checkout.html">Edit pesanan</a><button id="print" type="button">Cetak invoice</button><a href="./">Kembali ke tema</a></div>
+</article>
+</main><footer>Ruang Janji · Undangan pernikahan digital</footer></body></html>
