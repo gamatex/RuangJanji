@@ -14,5 +14,17 @@ try {
  $('date').textContent=[e.event_date,e.event_time].filter(Boolean).join(' · ');
  $('venue').textContent=e.venue||'';$('address').textContent=e.address||'';$('story').textContent=e.story||'';
  if(e.photo && /^https:\/\//.test(e.photo)){$('photo').src=e.photo;$('photo').classList.remove('hidden');}
- document.title=($('names').textContent||'Undangan')+' | RuangJanji';show('invitation');
+ document.title=($('names').textContent||'Undangan')+' | RuangJanji';
+ const token=new URLSearchParams(location.search).get('t');
+ if(token&&/^[0-9a-f-]{36}$/i.test(token)){
+ $('rsvp-section').classList.remove('hidden');
+ $('rsvp-status').onchange=()=>{const attending=$('rsvp-status').value==='hadir';$('rsvp-attendees').disabled=!attending;$('rsvp-attendees').value=attending?'1':'0';};
+ $('rsvp-form').onsubmit=async ev=>{
+ ev.preventDefault();const button=ev.currentTarget.querySelector('button');button.disabled=true;$('rsvp-message').textContent='Mengirim konfirmasi...';
+ const {error}=await db.rpc('submit_guest_rsvp',{p_slug:slug,p_token:token,p_rsvp:$('rsvp-status').value,p_attendees:Number($('rsvp-attendees').value),p_wishes:$('rsvp-wishes').value.trim()});
+ $('rsvp-message').textContent=error?'Gagal mengirim: '+error.message:'Terima kasih, konfirmasi berhasil tersimpan.';
+ button.disabled=false;
+ };
+ }
+ show('invitation');
 } catch(e){show('missing');}
