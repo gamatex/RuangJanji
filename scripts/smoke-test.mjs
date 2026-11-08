@@ -14,3 +14,7 @@ for(const marker of ["db.rpc('staff_checkin'","db.rpc('staff_souvenir'","db.rpc(
 assert(!guest.includes("db.from('guests').update({checkin_at"),'Unsafe direct checkin update');
 assert(!guest.includes("db.from('guests').update({souvenir"),'Unsafe direct souvenir update');
 console.log('PASS static integration checks. Live Supabase, camera, and APK device tests still required.');
+
+const guestCss=readFileSync('apps/buku-tamu/guestbook.css','utf8');
+assert(/\[hidden\]\s*\{\s*display\s*:\s*none\s*!important\s*\}/.test(guestCss),'Hidden welcome/auth screens must not remain visible');
+console.log('PASS guestbook hidden-screen regression check.');
