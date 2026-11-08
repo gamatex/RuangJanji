@@ -38,10 +38,10 @@ $('#import-preview').onclick=async()=>{
  }catch(e){$('#import-result').textContent='Gagal membaca CSV: '+e.message;}
 };
 $('#import-confirm').onclick=async()=>{
- const eventId=$('#event').value;if(eventRoles.get(eventId)!=='owner')return msg('Hanya pemilik yang dapat mengimpor tamu.');if(!eventId||!importRows.length)return;
+ const eventId=$('#event').value;if(eventRoles.get(eventId)!=='owner')return msg('Hanya pemilik yang dapat mengimpor tamu.');if(!eventId||!importRows.length)return;if(!window.confirm('Impor '+importRows.length+' tamu ke acara terpilih? Data yang sudah tersimpan tidak otomatis dibatalkan jika sebagian proses gagal.'))return;
  const button=$('#import-confirm');button.disabled=true;
  let inserted=0;
- for(let i=0;i<importRows.length;i+=50){const {error}=await db.from('guests').insert(importRows.slice(i,i+50).map(x=>({...x,event_id:eventId})));if(error){msg('Impor berhenti setelah '+inserted+' baris: '+error.message);await load();return;}inserted+=Math.min(50,importRows.length-i);}
+ for(let i=0;i<importRows.length;i+=50){if($('#event').value!==eventId){msg('Acara berubah, impor dihentikan setelah '+inserted+' tamu.');return;}const {error}=await db.from('guests').insert(importRows.slice(i,i+50).map(x=>({...x,event_id:eventId})));if(error){msg('Impor berhenti setelah '+inserted+' baris: '+error.message);await load();return;}inserted+=Math.min(50,importRows.length-i);}
  importRows=[];$('#import-result').textContent=inserted+' tamu berhasil diimpor.';msg('Impor selesai.');await load();
 };
 async function checkToken(value){
@@ -50,7 +50,7 @@ async function checkToken(value){
  const guest=guests.find(g=>g.token.toLowerCase()===token.toLowerCase());
  if(!guest)return msg('Tamu tidak ditemukan pada acara ini');
  if(guest.checkin_at)return msg(guest.name+' sudah check-in');
- if(!window.confirm('Check-in '+guest.name+'?'))return;
+ if(!window.confirm('Check-in '+guest.name+' (kuota '+guest.quota+')?'))return;
  await checkin(guest.id);
 }
 $('#qr-checkin').onclick=()=>checkToken($('#qr-token').value);
