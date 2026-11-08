@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build-public.mjs",
-    "deploy": "npm run build && wrangler deploy"
+    "deploy": "npm run build && wrangler deploy",
+    "test": "node scripts/smoke-test.mjs"
   },
   "devDependencies": {
     "wrangler": "4.45.0"
