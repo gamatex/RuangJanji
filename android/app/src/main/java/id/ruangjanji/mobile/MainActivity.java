@@ -23,7 +23,7 @@ public class MainActivity extends Activity {
  web.setWebViewClient(new WebViewClient(){
  @Override public boolean shouldOverrideUrlLoading(WebView v,WebResourceRequest req){
  Uri u=req.getUrl();String host=u.getHost();
- if("https".equals(u.getScheme()) && (host.equals("ruangjanji.dhjougkyha.workers.dev")||host.equals("bfaarhffvylqqbxycuds.supabase.co")))return false;
+ if("https".equals(u.getScheme()) && ("ruangjanji.dhjougkyha.workers.dev".equals(host)||"bfaarhffvylqqbxycuds.supabase.co".equals(host)))return false;
  try{startActivity(new Intent(Intent.ACTION_VIEW,u));}catch(Exception e){Toast.makeText(MainActivity.this,"Tautan tidak tersedia",Toast.LENGTH_SHORT).show();}
  return true;
  }
