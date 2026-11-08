@@ -9,6 +9,14 @@ try {
  const {data,error}=await db.rpc('get_published_invitation',{p_slug:slug});
  if(error||!data?.length)throw Error('not found');
  const e=data[0];
+ // Only load approved local template names. Never accept arbitrary URLs from database.
+ if(/^(?:art-(?:0[1-4])|birthday-(?:0[1-2])|deluxe-(?:0[1-8])|minisite-(?:0[1-9]|10)|syari-(?:0[1-3]))$/.test(e.theme||'')){
+  const frame=$('theme-frame');
+  frame.src='/templates/'+e.theme+'.html?to='+encodeURIComponent(new URLSearchParams(location.search).get('to')||'Tamu Undangan');
+  $('theme-container').classList.remove('hidden');
+  frame.addEventListener('load',()=>{frame.contentWindow?.postMessage({type:'ruangjanji:published-invitation',payload:{groom:e.groom,bride:e.bride,title:e.title,date:e.event_date,time:e.event_time,venue:e.venue,address:e.address,story:e.story,photo:e.photo}},location.origin);});
+ }
+
  $('names').textContent=[e.bride,e.groom].filter(Boolean).join(' & ');
  $('title').textContent=e.title||'';
  $('date').textContent=[e.event_date,e.event_time].filter(Boolean).join(' · ');
