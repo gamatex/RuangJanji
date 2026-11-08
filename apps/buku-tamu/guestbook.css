@@ -5,3 +5,8 @@
 
 /* Respect the HTML hidden attribute even on elements with explicit display rules. */
 [hidden]{display:none!important}
+
+/* Mobile navigation stays within the viewport instead of clipping the last tab. */
+.guest-nav{display:flex;max-width:100%;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;gap:8px;padding-bottom:8px}
+.guest-nav button{flex:0 0 auto;white-space:nowrap}
+#event-empty{font-size:15px;line-height:1.6}
