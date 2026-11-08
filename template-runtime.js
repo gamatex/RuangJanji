@@ -86,3 +86,24 @@ document.querySelectorAll('.template-rsvp').forEach(form=>{
     }catch{form.querySelector('[role=status]').textContent='Penyimpanan browser tidak tersedia.'}
   };
 });
+
+/* Published invitations: keep each template's own ornaments, CSS and cover.
+   Receive only the public invitation data from the same-origin parent page. */
+if(window.parent!==window){
+ window.addEventListener('message',event=>{
+  if(event.origin!==location.origin||event.source!==window.parent||event.data?.type!=='ruangjanji:published-invitation')return;
+  const d=event.data.payload||{};
+  document.querySelector('.template-tools')?.remove();
+  const names=[d.bride,d.groom].filter(Boolean).join(' & ');
+  const headings=[...document.querySelectorAll('.elementor-widget-heading .elementor-heading-title')];
+  // Replace sample couple names in prominent title slots only, not every text widget.
+  const title=headings.find(h=>/\s[&＆]\s/.test(h.textContent||'')&&h.textContent.trim().length<110);
+  if(title&&names)title.textContent=names;
+  const slots=[...document.querySelectorAll('[data-photo-slot]')];
+  if(d.photo&&/^https:\/\//i.test(d.photo)&&slots.length){
+   const first=slots[0];first.style.backgroundImage='url('+JSON.stringify(d.photo)+')';
+   first.style.backgroundSize='cover';first.style.backgroundPosition='center';
+  }
+  document.title=(names||d.title||'Undangan')+' · RuangJanji';
+ });
+}
