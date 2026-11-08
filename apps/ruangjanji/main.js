@@ -139,7 +139,7 @@ document.querySelectorAll('[data-event-action]').forEach(b=>b.onclick=async()=>{
  if(a==='edit'){if(e.status!=='draft'){msg('Pengeditan undangan terbit memerlukan alur khusus.');return;}await editEvent(id);return;}
  if(a==='addon'){msg('Add-on belum tersedia. Tidak ada biaya yang diproses.');return;}
  if(a==='settings'){await openInvitationSettings(id);return;}
- if(a==='guests'||a==='rsvp')msg('Ekspor Excel belum tersedia. Tombol ini belum mengunduh data.');
+ if(a==='guests'||a==='rsvp')await exportGuestData(a==='guests'?'tamu':'rsvp',id);
 });
 let settingsEventId=null;
 function closeInvitationSettings(){$('#invitation-settings-sheet').hidden=true;settingsEventId=null;}
@@ -203,12 +203,27 @@ async function loadEvents(){
 }
 
 
+// Excel can open UTF-8 CSV. Prefix spreadsheet formulas to prevent formula injection.
+function csvCell(value){let s=String(value??'').replace(/\r\n?/g,'\n');if(/^[\s]*[=+@-]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
+function downloadCsv(filename,rows){const content='\uFEFF'+rows.map(row=>row.map(csvCell).join(',')).join('\r\n');const blob=new Blob([content],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);}
+async function exportGuestData(kind,id){
+ if(!id){msg('Pilih undangan terlebih dahulu.');return;}
+ try{
+ const rows=await fetchGuests(id),event=eventCache.find(e=>e.id===id);
+ const filename='ruangjanji-'+(event?.slug||'tamu')+'-'+kind+'.csv';
+ const header=kind==='tamu'?['Nama','Kelompok','WhatsApp','Kuota','RSVP','Jumlah hadir','Check-in','Souvenir']:['Nama','RSVP','Jumlah hadir','Ucapan'];
+ const data=rows.map(g=>kind==='tamu'?[g.name,g.group_name,g.phone,g.quota,guestStatus(g.rsvp),g.attendees,g.checkin_at||'',g.souvenir?'Ya':'Tidak']:[g.name,guestStatus(g.rsvp),g.attendees,g.wishes]);
+ downloadCsv(filename,[header,...data]);msg('CSV berhasil disiapkan untuk Excel.');
+ }catch(e){msg('Ekspor gagal: '+e.message);}
+}
+$('#guest-export').onclick=()=>exportGuestData('tamu',guestSelect.value);
+$('#rsvp-export').onclick=()=>exportGuestData('rsvp',guestSelect.value);
 const guestSelect=$('#guest-event-select'),wishSelect=$('#wish-event-select');
 guestSelect.onchange=()=>loadGuestList();wishSelect.onchange=()=>loadWishList();
 $('#guest-reload').onclick=()=>loadGuestList();$('#wish-reload').onclick=()=>loadWishList();
 const guestStatus=v=>({yes:'Hadir',attending:'Hadir',hadir:'Hadir',no:'Tidak hadir',declined:'Tidak hadir',tidak_hadir:'Tidak hadir',maybe:'Belum pasti',pending:'Belum pasti',belum:'Belum menjawab'}[String(v||'').toLowerCase()]||'Belum menjawab');
 function guestCounts(rows){const yes=rows.filter(x=>['yes','attending','hadir'].includes(String(x.rsvp||'').toLowerCase())).length;const no=rows.filter(x=>['no','declined','tidak_hadir'].includes(String(x.rsvp||'').toLowerCase())).length;const wishes=rows.filter(x=>String(x.wishes||'').trim()).length;return '<div><strong>'+rows.length+'</strong><small>Total tamu</small></div><div><strong>'+yes+'</strong><small>Hadir</small></div><div><strong>'+no+'</strong><small>Tidak hadir</small></div><div><strong>'+wishes+'</strong><small>Ucapan</small></div>';}
-async function fetchGuests(id){if(!id)return [];const {data,error}=await db.from('guests').select('id,event_id,name,group_name,phone,quota,token,rsvp,attendees,wishes,checkin_at,created_at').eq('event_id',id).order('created_at',{ascending:false}).limit(500);if(error)throw error;return data||[];}
+async function fetchGuests(id){if(!id)return [];const {data,error}=await db.from('guests').select('id,event_id,name,group_name,phone,quota,token,rsvp,attendees,wishes,checkin_at,souvenir,created_at').eq('event_id',id).order('created_at',{ascending:false}).limit(500);if(error)throw error;return data||[];}
 async function loadGuestList(){
  const id=guestSelect.value;if(!user||!id){$('#guest-list').textContent='Pilih undangan terlebih dahulu.';$('#guest-stats').innerHTML='';return;}
  try{const rows=await fetchGuests(id);if(guestSelect.value!==id)return;$('#guest-stats').innerHTML=guestCounts(rows);
