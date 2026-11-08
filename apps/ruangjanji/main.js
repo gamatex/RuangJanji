@@ -62,12 +62,23 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeThemeDetail();}
 $('#detail-select').onclick=()=>{if(!detailSlug)return;const theme=themes.find(t=>t.slug===detailSlug);if(!theme?.enabled)return;$('#theme-select').value=detailSlug;showTab('events');openEditor('all');};
 $('#search').oninput=e=>{searchTerm=e.target.value.toLowerCase().trim();renderThemes();};$('#search-home').oninput=e=>{searchTerm=e.target.value.toLowerCase().trim();$('#search').value=e.target.value;showTab('catalog');renderThemes();};
 async function loadThemes(){const {data,error}=await db.from('theme_prices').select('slug,amount,enabled').order('slug');if(error){msg(error.message);return;}themes=data||[];$('#theme-select').innerHTML=themes.filter(t=>t.enabled).map(t=>'<option value="'+safe(t.slug)+'">'+safe(t.slug)+'</option>').join('')||'<option value="">Belum ada template yang dapat dipesan</option>';$('#save-event').disabled=!themes.some(t=>t.enabled);renderThemes();}
+function refreshEventPreview(){
+ const form=$('#event-form');if(!form)return;
+ const date=form.elements.date.value,time=form.elements.time.value||'00:00';
+ const countdown=$('#editor-countdown');
+ if(date){const target=new Date(date+'T'+time+':00'),diff=target.getTime()-Date.now();
+  if(Number.isFinite(diff)){const days=Math.floor(Math.max(0,diff)/86400000),hours=Math.floor(Math.max(0,diff)%86400000/3600000),minutes=Math.floor(Math.max(0,diff)%3600000/60000);countdown.textContent=diff>0?days+' hari · '+hours+' jam · '+minutes+' menit lagi':'Tanggal acara sudah lewat atau sedang berlangsung.';}
+ }else countdown.textContent='Isi tanggal dan waktu acara untuk melihat hitung mundur.';
+ const address=form.elements.address.value.trim(),link=$('#editor-map-link');link.hidden=!address;
+ if(address)link.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(address);
+}
+$('#event-form').addEventListener('input',refreshEventPreview);
 const editFields=['title','groom','bride','slug','date','time','venue','address','story','theme'];
 function clearEditor(){hideEditor();mediaEventId=null;document.querySelectorAll('[data-editor-group]').forEach(el=>el.hidden=false);const form=$('#event-form');form.reset();form.elements.event_id.value='';$('#save-event').textContent='Simpan draft undangan';$('#editor-title').textContent='Buat draft undangan';$('#cancel-edit').hidden=true;form.elements.slug.readOnly=false;form.elements.theme.disabled=false;}
 $('#cancel-edit').onclick=clearEditor;
 $('#close-editor').onclick=hideEditor;
 function hideEditor(){$('#editor-sheet').hidden=true;$('#media-sheet').hidden=true;document.body.classList.remove('editor-open');}
-function openEditor(group='all'){if(group!=='all'&&!$('#event-form').elements.event_id.value){msg('Pilih undangan draft terlebih dahulu.');return;}$('#media-sheet').hidden=true;$('#editor-sheet').hidden=false;document.body.classList.add('editor-open');document.querySelectorAll('[data-editor-group]').forEach(el=>{el.hidden=group!=='all'&&el.dataset.editorGroup!==group;});$('#editor-title').textContent=group==='all'?'Buat draft undangan':({couple:'Data pengantin',event:'Acara & lokasi',story:'Kisah cinta',settings:'Pengaturan undangan'}[group]||'Edit undangan');}
+function openEditor(group='all'){if(group!=='all'&&!$('#event-form').elements.event_id.value){msg('Pilih undangan draft terlebih dahulu.');return;}$('#media-sheet').hidden=true;$('#editor-sheet').hidden=false;document.body.classList.add('editor-open');document.querySelectorAll('[data-editor-group]').forEach(el=>{el.hidden=group!=='all'&&el.dataset.editorGroup!==group;});refreshEventPreview();$('#editor-title').textContent=group==='all'?'Buat draft undangan':({couple:'Data pengantin',event:'Acara & lokasi',story:'Kisah cinta',settings:'Pengaturan undangan'}[group]||'Edit undangan');}
 document.querySelectorAll('[data-editor]').forEach(b=>b.onclick=()=>openEditor(b.dataset.editor));
 
 $('#event-form').onsubmit=async e=>{
