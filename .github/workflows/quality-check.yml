@@ -1,0 +1,37 @@
+name: RuangJanji quality checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Check JavaScript and application integration
+        run: npm test
+      - name: Build Cloudflare static assets
+        run: npm run build
+      - name: Verify generated site
+        shell: bash
+        run: |
+          test -f dist/index.html
+          test -f dist/apps/ruangjanji/index.html
+          test -f dist/apps/buku-tamu/index.html
+          test -f dist/theme-preview.html
+          echo 'RuangJanji build artifacts verified'
