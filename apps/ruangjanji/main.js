@@ -26,7 +26,7 @@ $('#signup').onclick=async()=>{
 $('#logout').onclick=()=>db.auth.signOut();
 const categories=['Semua','Art','Birthday','Deluxe','MiniMotion','Minisite','Motion',"Syar'i"];
 let activeCategory='Semua',searchTerm='';
-function showTab(tab){closeThemeDetail();closeCheckout();closeOrderDetail();closeEventActions();closeDeleteEvent();closeInvitationSettings();hideEditor();for(const id of ['home','catalog','events','guests','wishes','account-view'])document.getElementById(id).hidden=id!==tab;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===tab);b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false');});window.scrollTo({top:0,behavior:'instant'});}
+function showTab(tab){if(tab==='guests')void loadGuestList();if(tab==='wishes')void loadWishList();closeThemeDetail();closeCheckout();closeOrderDetail();closeEventActions();closeDeleteEvent();closeInvitationSettings();hideEditor();for(const id of ['home','catalog','events','guests','wishes','account-view'])document.getElementById(id).hidden=id!==tab;document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===tab);b.setAttribute('aria-current',b.dataset.tab===tab?'page':'false');});window.scrollTo({top:0,behavior:'instant'});}
 document.querySelectorAll('[data-tab],[data-go]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab||b.dataset.go));
 $('#explore').onclick=()=>showTab('catalog');
 function themeCategory(slug){const s=slug.toLowerCase();if(s.startsWith('mini-motion')||s.startsWith('minimotion'))return 'MiniMotion';if(s.startsWith('minisite'))return 'Minisite';if(s.startsWith('birthday'))return 'Birthday';if(s.startsWith('deluxe'))return 'Deluxe';if(s.startsWith('motion'))return 'Motion';if(s.startsWith('syari')||s.startsWith('syar'))return "Syar'i";return 'Art';}
@@ -197,12 +197,44 @@ async function loadEvents(){
  if(error){msg(error.message);return;}
  eventCache=data||[];
  $('#editor-actions').hidden=!(data||[]).some(x=>x.status==='draft');
- const eventSummary=(data||[]).map(x=>'<div class="event-summary"><strong>'+safe(x.title||'Undangan')+'</strong><small>'+safe(x.status==='published'?'Aktif':'Draft')+'</small></div>').join('')||'<p class="muted">Belum ada undangan. Mulai dengan melihat katalog template.</p>';$('#guest-events').innerHTML=eventSummary;$('#wish-events').innerHTML=eventSummary;
+ const eventOptions=(data||[]).map(x=>'<option value="'+safe(x.id)+'">'+safe(x.title||x.slug)+'</option>').join('');for(const id of ['guest-event-select','wish-event-select']){const el=$('#'+id),previous=el.value;el.innerHTML=eventOptions||'<option value="">Belum ada undangan</option>';if((data||[]).some(x=>x.id===previous))el.value=previous;}
  $('#event-list').innerHTML=(data||[]).map(x=>'<article class="event-card"><button type="button" class="event-more" data-event-menu="'+safe(x.id)+'" aria-label="Menu undangan">⋮</button><span class="tag">'+safe(x.status)+'</span><h3>'+safe(x.title)+'</h3><p class="muted">'+safe(x.theme)+' · '+safe(x.date||'Tanggal belum ditentukan')+'</p><small>Alamat: /'+safe(x.slug)+'</small><p>'+(x.status==='published'?'<a target="_blank" rel="noopener" href="/'+encodeURIComponent(x.slug)+'">Lihat undangan</a>':'Undangan belum dipublikasikan')+'</p>'+(x.status==='draft'?'<button class="outline" type="button" data-edit="'+safe(x.id)+'">Edit undangan</button><button class="outline" type="button" data-media="'+safe(x.id)+'">Foto & galeri</button><button class="primary" type="button" data-checkout="'+safe(x.id)+'">Lihat checkout</button><button class="outline" type="button" data-request-delete="'+safe(x.id)+'">Hapus draft</button>':'')+'</article>').join('')||'<div class="empty">Belum ada undangan. Setelah template tersedia, kamu bisa membuat draft pertamamu.</div>';
  document.querySelectorAll('[data-request-delete]').forEach(b=>b.onclick=()=>requestDeleteEvent(b.dataset.requestDelete));document.querySelectorAll('[data-event-menu]').forEach(b=>b.onclick=()=>openEventActions(b.dataset.eventMenu));document.querySelectorAll('[data-checkout]').forEach(b=>b.onclick=()=>openCheckout(b.dataset.checkout));document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editEvent(b.dataset.edit));document.querySelectorAll('[data-media]').forEach(b=>b.onclick=()=>openMedia(b.dataset.media));
 }
 
 
+const guestSelect=$('#guest-event-select'),wishSelect=$('#wish-event-select');
+guestSelect.onchange=()=>loadGuestList();wishSelect.onchange=()=>loadWishList();
+$('#guest-reload').onclick=()=>loadGuestList();$('#wish-reload').onclick=()=>loadWishList();
+const guestStatus=v=>({yes:'Hadir',attending:'Hadir',hadir:'Hadir',no:'Tidak hadir',declined:'Tidak hadir',tidak_hadir:'Tidak hadir',maybe:'Belum pasti',pending:'Belum pasti'}[String(v||'').toLowerCase()]||'Belum menjawab');
+function guestCounts(rows){const yes=rows.filter(x=>['yes','attending','hadir'].includes(String(x.rsvp||'').toLowerCase())).length;const no=rows.filter(x=>['no','declined','tidak_hadir'].includes(String(x.rsvp||'').toLowerCase())).length;const wishes=rows.filter(x=>String(x.wishes||'').trim()).length;return '<div><strong>'+rows.length+'</strong><small>Total tamu</small></div><div><strong>'+yes+'</strong><small>Hadir</small></div><div><strong>'+no+'</strong><small>Tidak hadir</small></div><div><strong>'+wishes+'</strong><small>Ucapan</small></div>';}
+async function fetchGuests(id){if(!id)return [];const {data,error}=await db.from('guests').select('id,event_id,name,group_name,phone,quota,rsvp,attendees,wishes,checkin_at,created_at').eq('event_id',id).order('created_at',{ascending:false}).limit(500);if(error)throw error;return data||[];}
+async function loadGuestList(){
+ const id=guestSelect.value;if(!user||!id){$('#guest-list').textContent='Pilih undangan terlebih dahulu.';$('#guest-stats').innerHTML='';return;}
+ try{const rows=await fetchGuests(id);if(guestSelect.value!==id)return;$('#guest-stats').innerHTML=guestCounts(rows);
+ $('#guest-list').innerHTML=rows.map(g=>'<article class="guest-item"><div><strong>'+safe(g.name)+'</strong><p class="muted">'+safe(g.group_name||'Tanpa kelompok')+' · Kuota '+Number(g.quota||1)+' · '+safe(guestStatus(g.rsvp))+'</p></div><button type="button" class="outline" data-remove-guest="'+safe(g.id)+'">Hapus</button></article>').join('')||'<p class="empty">Belum ada tamu terdaftar.</p>';
+ document.querySelectorAll('[data-remove-guest]').forEach(b=>b.onclick=()=>removeGuest(b.dataset.removeGuest,id));
+ }catch(e){$('#guest-list').textContent='Gagal memuat tamu: '+e.message;}
+}
+$('#guest-form').onsubmit=async e=>{
+ e.preventDefault();const id=guestSelect.value;if(!id)return;
+ const name=$('#guest-name').value.trim(),group=$('#guest-group').value.trim(),phone=$('#guest-phone').value.trim(),quota=Number($('#guest-quota').value);
+ if(!name||!Number.isInteger(quota)||quota<1||quota>20){msg('Periksa nama dan kuota 1–20.');return;}
+ const b=$('#guest-add');b.disabled=true;
+ try{const {error}=await db.from('guests').insert({event_id:id,name,group_name:group||null,phone:phone||null,quota});if(error)throw error;$('#guest-form').reset();$('#guest-quota').value=2;msg('Tamu berhasil ditambahkan.');await loadGuestList();}
+ catch(error){msg('Gagal menambahkan tamu: '+error.message);}finally{b.disabled=false;}
+};
+async function removeGuest(id,eventId){
+ if(!window.confirm('Hapus tamu ini dari daftar? Data RSVP dan ucapannya juga akan hilang.'))return;
+ const {error}=await db.from('guests').delete().eq('id',id).eq('event_id',eventId);
+ if(error){msg('Gagal menghapus tamu: '+error.message);return;}msg('Tamu dihapus.');await loadGuestList();
+}
+async function loadWishList(){
+ const id=wishSelect.value;if(!user||!id){$('#wish-list').textContent='Pilih undangan terlebih dahulu.';$('#wish-stats').innerHTML='';return;}
+ try{const rows=await fetchGuests(id);if(wishSelect.value!==id)return;$('#wish-stats').innerHTML=guestCounts(rows);
+ $('#wish-list').innerHTML=rows.filter(g=>g.wishes||g.rsvp).map(g=>'<article class="guest-item"><div><strong>'+safe(g.name)+'</strong><p class="muted">'+safe(guestStatus(g.rsvp))+(g.attendees?' · '+Number(g.attendees)+' orang':'')+'</p>'+(g.wishes?'<p>'+safe(g.wishes)+'</p>':'')+'</div></article>').join('')||'<p class="empty">Belum ada konfirmasi atau ucapan dari tamu.</p>';
+ }catch(e){$('#wish-list').textContent='Gagal memuat RSVP: '+e.message;}
+}
 const bucket='invitation-media';
 const publicPhoto=path=>db.storage.from(bucket).getPublicUrl(path).data.publicUrl;
 $('#close-media').onclick=hideEditor;
