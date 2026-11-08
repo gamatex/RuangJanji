@@ -7,7 +7,7 @@ const music=document.querySelector('#template-music');
 if(opener&&cover){
   document.body.classList.add('template-locked');
   opener.onclick=e=>{
-    e.preventDefault();cover.classList.add('opened');document.body.classList.remove('template-locked');
+    e.preventDefault();cover.classList.add('opened');document.body.classList.remove('template-locked');document.body.classList.add('rj-opened');
     setTimeout(()=>{cover.hidden=true},800);
     if(audio?.getAttribute('src'))audio.play().then(()=>music.setAttribute('aria-pressed','true')).catch(()=>{});
   };
