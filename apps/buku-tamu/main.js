@@ -106,12 +106,12 @@ $('#download-attendance').onclick=()=>{
 };
 async function printGuestCard(id){
  const g=guests.find(x=>x.id===id);if(!g)return;
+ const w=window.open('','_blank');if(!w){msg('Izinkan pop-up untuk mencetak kartu tamu.');return;}
  try{
   const QRCode=(await import('https://esm.sh/qrcode@1.5.4?bundle')).default;
   const qr=await QRCode.toDataURL(g.token,{width:320,margin:2,errorCorrectionLevel:'M'});
-  const w=window.open('','_blank');if(!w){msg('Izinkan pop-up untuk mencetak kartu tamu.');return;}
   const name=safe(g.name),group=safe(g.group_name);
   w.document.write('<!doctype html><html lang="id"><meta charset="utf-8"><title>Kartu Tamu</title><style>body{font-family:Arial,sans-serif;text-align:center;margin:30px;color:#2C221E}.card{max-width:350px;margin:auto;border:2px solid #C86D51;border-radius:18px;padding:24px}img{width:240px}h1{font-size:22px}@media print{button{display:none}}</style><div class="card"><p>RUANGJANJI · BUKU TAMU</p><h1>'+name+'</h1><p>'+group+' · Kuota '+Number(g.quota)+'</p><img alt="Kode QR tamu" src="'+qr+'"><p>Tunjukkan QR kepada petugas</p></div><p><button onclick="window.print()">Cetak kartu</button></p></html>');
   w.document.close();
- }catch(e){msg('Gagal membuat QR: '+e.message);}
+ }catch(e){w.close();msg('Gagal membuat QR: '+e.message);}
 }
