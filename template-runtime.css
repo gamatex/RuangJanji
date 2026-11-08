@@ -18,3 +18,12 @@ body.rj-opened [data-enter].entered.bounceIn{animation-name:rj-bounce}
 body.rj-opened [data-enter].entered.animated-slow{animation-duration:1.5s}
 body.rj-opened [data-enter].entered.animated-fast{animation-duration:.5s}
 @media(prefers-reduced-motion:reduce){body.rj-opened [data-enter].entered{animation:none!important}}
+
+/* Only designated ornaments move continuously; preserve authored layouts. */
+@keyframes rj-ornament-float{0%,100%{translate:0 0}50%{translate:0 -10px}}
+@keyframes rj-ornament-sway{0%,100%{rotate:-3deg}50%{rotate:3deg}}
+@keyframes rj-ornament-drift{0%,100%{translate:-6px 0}50%{translate:6px -4px}}
+body.rj-opened .rj-motion-float{animation:rj-ornament-float 6s ease-in-out var(--rj-phase,0s) infinite}
+body.rj-opened .rj-motion-sway{animation:rj-ornament-sway 7s ease-in-out var(--rj-phase,0s) infinite;transform-origin:50% 90%}
+body.rj-opened .rj-motion-drift{animation:rj-ornament-drift 9s ease-in-out var(--rj-phase,0s) infinite}
+@media(prefers-reduced-motion:reduce){body.rj-opened .rj-motion{animation:none!important}}
