@@ -206,7 +206,7 @@ async function loadEvents(){
 const guestSelect=$('#guest-event-select'),wishSelect=$('#wish-event-select');
 guestSelect.onchange=()=>loadGuestList();wishSelect.onchange=()=>loadWishList();
 $('#guest-reload').onclick=()=>loadGuestList();$('#wish-reload').onclick=()=>loadWishList();
-const guestStatus=v=>({yes:'Hadir',attending:'Hadir',hadir:'Hadir',no:'Tidak hadir',declined:'Tidak hadir',tidak_hadir:'Tidak hadir',maybe:'Belum pasti',pending:'Belum pasti'}[String(v||'').toLowerCase()]||'Belum menjawab');
+const guestStatus=v=>({yes:'Hadir',attending:'Hadir',hadir:'Hadir',no:'Tidak hadir',declined:'Tidak hadir',tidak_hadir:'Tidak hadir',maybe:'Belum pasti',pending:'Belum pasti',belum:'Belum menjawab'}[String(v||'').toLowerCase()]||'Belum menjawab');
 function guestCounts(rows){const yes=rows.filter(x=>['yes','attending','hadir'].includes(String(x.rsvp||'').toLowerCase())).length;const no=rows.filter(x=>['no','declined','tidak_hadir'].includes(String(x.rsvp||'').toLowerCase())).length;const wishes=rows.filter(x=>String(x.wishes||'').trim()).length;return '<div><strong>'+rows.length+'</strong><small>Total tamu</small></div><div><strong>'+yes+'</strong><small>Hadir</small></div><div><strong>'+no+'</strong><small>Tidak hadir</small></div><div><strong>'+wishes+'</strong><small>Ucapan</small></div>';}
 async function fetchGuests(id){if(!id)return [];const {data,error}=await db.from('guests').select('id,event_id,name,group_name,phone,quota,rsvp,attendees,wishes,checkin_at,created_at').eq('event_id',id).order('created_at',{ascending:false}).limit(500);if(error)throw error;return data||[];}
 async function loadGuestList(){
@@ -221,7 +221,7 @@ $('#guest-form').onsubmit=async e=>{
  const name=$('#guest-name').value.trim(),group=$('#guest-group').value.trim(),phone=$('#guest-phone').value.trim(),quota=Number($('#guest-quota').value);
  if(!name||!Number.isInteger(quota)||quota<1||quota>20){msg('Periksa nama dan kuota 1–20.');return;}
  const b=$('#guest-add');b.disabled=true;
- try{const {error}=await db.from('guests').insert({event_id:id,name,group_name:group||null,phone:phone||null,quota});if(error)throw error;$('#guest-form').reset();$('#guest-quota').value=2;msg('Tamu berhasil ditambahkan.');await loadGuestList();}
+ try{const {error}=await db.from('guests').insert({event_id:id,name,group_name:group,phone:phone,quota});if(error)throw error;$('#guest-form').reset();$('#guest-quota').value=2;msg('Tamu berhasil ditambahkan.');await loadGuestList();}
  catch(error){msg('Gagal menambahkan tamu: '+error.message);}finally{b.disabled=false;}
 };
 async function removeGuest(id,eventId){
