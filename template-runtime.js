@@ -36,6 +36,27 @@ if(!reducedMotion&&'IntersectionObserver'in window){
   };
 }
 if(!opener||!cover){document.body.classList.add('rj-opened');startReveals();}
+// All 27 templates share this runtime, but retain their own HTML/CSS assets.
+// Select only likely transparent decorative PNGs within animated image widgets.
+// Exclude covers, payment logos, brand images, and user photos.
+if(!reducedMotion){
+  const theme=document.body.dataset.theme||'';
+  const category=theme.split('-')[0];
+  const allowed={art:5,birthday:4,deluxe:7,minisite:6,syari:5};
+  const limit=allowed[category]||4;
+  let count=0;
+  document.querySelectorAll('.elementor-widget-image.animated img').forEach(img=>{
+    if(count>=limit||img.hasAttribute('data-rj-motion'))return;
+    if(img.closest('.cover,.template-photo,.template-gallery-photo,.template-tools'))return;
+    const src=img.getAttribute('src')||'';
+    if(!/\\.png(?:$|[?#])/i.test(src)||!/catalog-assets\\//.test(src))return;
+    const alt=(img.getAttribute('alt')||'').toLowerCase();
+    if(/bca|mandiri|bank|rekening|logo|qr|barcode|brand/.test(alt))return;
+    if(img.naturalWidth&&img.naturalWidth<80)return;
+    img.setAttribute('data-rj-motion',['sway','float','drift'][count%3]);
+    count++;
+  });
+}
 // Template-specific decorative movement can be authored on original elements via
 // data-rj-motion="float|sway|drift". Do not animate all images indiscriminately.
 if(!reducedMotion){
