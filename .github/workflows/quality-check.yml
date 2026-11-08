@@ -19,10 +19,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: package-lock.json
       - name: Install dependencies
-        run: npm ci
+        run: npm install --no-package-lock
       - name: Check JavaScript and application integration
         run: npm test
       - name: Build Cloudflare static assets
