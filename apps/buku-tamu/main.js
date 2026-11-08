@@ -4,13 +4,13 @@ const $=s=>document.querySelector(s),msg=t=>$('#message').textContent=t;
 const key=SUPABASE_PUBLISHABLE_KEY;let db,user,guests=[];
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 if(!key)msg('Publishable key Supabase belum dikonfigurasi.');else{db=createClient(SUPABASE_URL,requirePublishableKey(key));db.auth.getSession().then(({data})=>sessionChanged(data.session));db.auth.onAuthStateChange((_e,s)=>{void sessionChanged(s);});}
-async function sessionChanged(s){user=s?.user||null;$('#auth').hidden=!!user;$('#app').hidden=!user;if(!user){void stopScan();return;}$('#account').textContent=user.email;const {data,error}=await db.from('events').select('id,title').eq('owner_id',user.id);if(error){msg(error.message);return;}$('#event').innerHTML=(data||[]).map(e=>'<option value="'+safe(e.id)+'">'+safe(e.title)+'</option>').join('');await load();}
+async function sessionChanged(s){user=s?.user||null;$('#auth').hidden=!!user;$('#app').hidden=!user;if(!user){void stopScan();return;}$('#account').textContent=user.email;const {data,error}=await db.rpc('staff_events');if(error){msg(error.message);return;}eventRoles=new Map((data||[]).map(e=>[e.id,e.access_role]));$('#event').innerHTML=(data||[]).map(e=>'<option value="'+safe(e.id)+'">'+safe(e.title)+' ('+safe(e.access_role)+')</option>').join('');await load();}
 $('#login').onsubmit=async e=>{e.preventDefault();if(!db)return;const {error}=await db.auth.signInWithPassword({email:$('#email').value,password:$('#password').value});msg(error?.message||'Berhasil masuk.');};$('#logout').onclick=()=>db.auth.signOut();$('#event').onchange=async()=>{await stopScan();importRows=[];$('#import-confirm').disabled=true;await load();};$('#search').oninput=render;
-async function load(){if(!$('#event').value){guests=[];render();return;}const {data,error}=await db.from('guests').select('id,name,group_name,phone,quota,checkin_at,attendees,souvenir,token,rsvp').eq('event_id',$('#event').value).order('name');if(error){msg(error.message);return;}guests=data||[];render();}
+async function load(){const eventId=$('#event').value;$('#staff-management').hidden=eventRoles.get(eventId)!=='owner';$('#guest-form').hidden=eventRoles.get(eventId)!=='owner';if(!eventId){guests=[];render();return;}const {data,error}=await db.rpc('staff_guest_list',{p_event_id:eventId});if(error){msg(error.message);return;}if($('#event').value!==eventId)return;guests=data||[];render();if(eventRoles.get(eventId)==='owner')await loadStaff();}
 function render(){const q=$('#search').value.toLowerCase();$('#total').textContent=guests.length;$('#checked').textContent=guests.filter(g=>g.checkin_at).length;$('#rsvp-yes').textContent=guests.filter(g=>g.rsvp==='hadir').length;$('#rsvp-no').textContent=guests.filter(g=>g.rsvp==='tidak_hadir').length;$('#attendees-total').textContent=guests.filter(g=>g.rsvp==='hadir').reduce((sum,g)=>sum+Number(g.attendees||0),0);$('#guests').innerHTML=guests.filter(g=>g.name.toLowerCase().includes(q)).map(g=>'<article class="panel"><h3>'+safe(g.name)+'</h3><small>'+safe(g.group_name)+' · Kuota '+g.quota+'</small><p>'+(g.checkin_at?'Sudah hadir':'Belum hadir')+'</p><button data-check="'+safe(g.id)+'" '+(g.checkin_at?'disabled':'')+'>Check-in</button> <button class="secondary" data-souvenir="'+safe(g.id)+'" '+(!g.checkin_at||g.souvenir?'disabled':'')+'>'+(g.souvenir?'Souvenir diambil':'Serahkan souvenir')+'</button></article>').join('')||'<p>Belum ada tamu.</p>';document.querySelectorAll('[data-check]').forEach(b=>b.onclick=()=>checkin(b.dataset.check));document.querySelectorAll('[data-souvenir]').forEach(b=>b.onclick=()=>souvenir(b.dataset.souvenir));}
-$('#guest-form').onsubmit=async e=>{e.preventDefault();if(!$('#event').value)return msg('Pilih acara dahulu.');const f=new FormData(e.currentTarget);const o={event_id:$('#event').value,name:f.get('name'),group_name:f.get('group_name'),phone:f.get('phone'),quota:Number(f.get('quota'))};const {error}=await db.from('guests').insert(o);msg(error?.message||'Tamu ditambahkan.');if(!error){e.currentTarget.reset();await load();}};
-async function checkin(id){const g=guests.find(x=>x.id===id);if(!g||g.checkin_at)return;const {error}=await db.from('guests').update({checkin_at:new Date().toISOString(),attendees:Math.max(1,Math.min(Number(g.quota)||1,Number(g.attendees)||1))}).eq('id',id).is('checkin_at',null);msg(error?.message||'Permintaan check-in diproses.');await load();}
-async function souvenir(id){const {error}=await db.from('guests').update({souvenir:true}).eq('id',id).eq('souvenir',false).not('checkin_at','is',null);msg(error?.message||'Permintaan souvenir diproses.');await load();}
+$('#guest-form').onsubmit=async e=>{e.preventDefault();if(eventRoles.get($('#event').value)!=='owner')return msg('Hanya pemilik yang dapat menambah tamu.');if(!$('#event').value)return msg('Pilih acara dahulu.');const f=new FormData(e.currentTarget);const o={event_id:$('#event').value,name:f.get('name'),group_name:f.get('group_name'),phone:f.get('phone'),quota:Number(f.get('quota'))};const {error}=await db.from('guests').insert(o);msg(error?.message||'Tamu ditambahkan.');if(!error){e.currentTarget.reset();await load();}};
+async function checkin(id){const g=guests.find(x=>x.id===id);if(!g||g.checkin_at)return;const count=Math.max(1,Math.min(Number(g.quota)||1,Number(g.attendees)||1));const {data,error}=await db.rpc('staff_checkin',{p_event_id:$('#event').value,p_guest_id:id,p_count:count});msg(error?.message||(data==='already_checked_in'?'Tamu sudah check-in.':'Check-in berhasil.'));await load();}
+async function souvenir(id){const {data,error}=await db.rpc('staff_souvenir',{p_event_id:$('#event').value,p_guest_id:id});msg(error?.message||(data==='already_collected'?'Souvenir sudah diambil.':'Souvenir berhasil dicatat.'));await load();}
 
 let importRows=[],scannerStream=null,scannerActive=false;
 function parseCsv(text){
@@ -38,7 +38,7 @@ $('#import-preview').onclick=async()=>{
  }catch(e){$('#import-result').textContent='Gagal membaca CSV: '+e.message;}
 };
 $('#import-confirm').onclick=async()=>{
- const eventId=$('#event').value;if(!eventId||!importRows.length)return;
+ const eventId=$('#event').value;if(eventRoles.get(eventId)!=='owner')return msg('Hanya pemilik yang dapat mengimpor tamu.');if(!eventId||!importRows.length)return;
  const button=$('#import-confirm');button.disabled=true;
  let inserted=0;
  for(let i=0;i<importRows.length;i+=50){const {error}=await db.from('guests').insert(importRows.slice(i,i+50).map(x=>({...x,event_id:eventId})));if(error){msg('Impor berhenti setelah '+inserted+' baris: '+error.message);await load();return;}inserted+=Math.min(50,importRows.length-i);}
@@ -65,3 +65,20 @@ $('#scan-start').onclick=async()=>{
  async function tick(){if(!scannerActive)return;try{const codes=await detector.detect(video);if(codes.length){await stopScan();await checkToken(codes[0].rawValue);return;}}catch(e){msg('Pemindaian gagal: '+e.message);await stopScan();return;}requestAnimationFrame(tick);}void tick();
  }catch(e){await stopScan();msg('Kamera tidak tersedia: '+e.message);}
 };
+
+async function loadStaff(){
+ const eventId=$('#event').value;
+ const {data,error}=await db.rpc('list_event_staff',{p_event_id:eventId});
+ if(error){$('#staff-list').textContent=error.message;return;}
+ if($('#event').value!==eventId)return;
+ $('#staff-list').innerHTML=(data||[]).map(x=>'<div class="panel"><span>'+safe(x.email)+'</span> <button type="button" class="secondary" data-revoke="'+safe(x.email)+'">Cabut akses</button></div>').join('')||'<p>Belum ada petugas.</p>';
+ document.querySelectorAll('[data-revoke]').forEach(b=>b.onclick=()=>changeStaff(b.dataset.revoke,false));
+}
+async function changeStaff(email,add){
+ const eventId=$('#event').value;if(eventRoles.get(eventId)!=='owner')return;
+ if(!add&&!window.confirm('Cabut akses petugas '+email+'?'))return;
+ const {error}=await db.rpc('manage_event_staff',{p_event_id:eventId,p_email:email,p_add:add});
+ msg(error?.message||(add?'Petugas ditambahkan.':'Akses petugas dicabut.'));
+ if(!error)await loadStaff();
+}
+$('#staff-form').onsubmit=async e=>{e.preventDefault();const email=$('#staff-email').value.trim();if(!email)return;await changeStaff(email,true);};
