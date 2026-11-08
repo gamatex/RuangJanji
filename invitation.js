@@ -12,7 +12,9 @@ try {
  $('names').textContent=[e.bride,e.groom].filter(Boolean).join(' & ');
  $('title').textContent=e.title||'';
  $('date').textContent=[e.event_date,e.event_time].filter(Boolean).join(' · ');
- $('venue').textContent=e.venue||'';$('address').textContent=e.address||'';$('story').textContent=e.story||'';
+ $('venue').textContent=e.venue||'';$('address').textContent=e.address||'';$('story').textContent=e.story||''; $('story-section').classList.toggle('hidden',!e.story);
+ if(e.address){$('map-link').href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(e.address);$('map-link').classList.remove('hidden');}
+ if(e.event_date){const target=new Date(e.event_date+'T'+(e.event_time||'00:00')+':00');if(Number.isFinite(target.getTime())){ $('countdown-section').classList.remove('hidden');const updateCountdown=()=>{const ms=Math.max(0,target.getTime()-Date.now());const d=Math.floor(ms/86400000),h=Math.floor(ms%86400000/3600000),m=Math.floor(ms%3600000/60000),sec=Math.floor(ms%60000/1000);$('countdown').textContent=ms?d+' hari · '+h+' jam · '+m+' menit · '+sec+' detik':'Hari bahagia telah tiba';};updateCountdown();setInterval(updateCountdown,1000);}}
  if(e.photo && /^https:\/\//.test(e.photo)){$('photo').src=e.photo;$('photo').classList.remove('hidden');}
  document.title=($('names').textContent||'Undangan')+' | RuangJanji';
  const token=new URLSearchParams(location.search).get('t');
