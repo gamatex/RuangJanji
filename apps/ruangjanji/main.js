@@ -7,8 +7,13 @@ let db;
 if(!key){msg('Konfigurasi belum lengkap: isi publishable key Supabase pada config.js sebelum digunakan.');}else{db=createClient(SUPABASE_URL,requirePublishableKey(key));}
 const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let user=null, themes=[],mediaEventId=null, eventCache=[], orderCache=[],selectedOrderId=null;
+function openCustomerLogin(){ $('#welcome').hidden=true;$('#auth').hidden=false;window.scrollTo(0,0);$('#email').focus(); }
+function showCustomerWelcome(){ $('#welcome').hidden=false;$('#auth').hidden=true;window.scrollTo(0,0); }
+$('#welcome-explore').onclick=openCustomerLogin;
+$('#welcome-signin').onclick=openCustomerLogin;
+
 async function init(){db.auth.onAuthStateChange((_event,s)=>{setTimeout(()=>{void sessionChanged(s);},0);});const {data,error}=await db.auth.getSession();if(error)msg(error.message);await sessionChanged(data?.session);}
-async function sessionChanged(s){user=s?.user||null;const loggedIn=!!user;document.getElementById('auth').hidden=loggedIn;document.getElementById('app').hidden=!loggedIn;document.getElementById('bottom-nav').hidden=!loggedIn;if(!loggedIn)return;document.getElementById('account').textContent=user.email||'Pelanggan';msg('Dashboard siap.');try{await Promise.all([loadThemes(),loadEvents()]);await loadOrders();}catch(e){msg('Dashboard terbuka, tetapi data gagal dimuat: '+e.message);}}
+async function sessionChanged(s){user=s?.user||null;const loggedIn=!!user;if(loggedIn){$('#welcome').hidden=true;$('#auth').hidden=true;}else if($('#welcome').hidden){$('#auth').hidden=false;}document.getElementById('app').hidden=!loggedIn;document.getElementById('bottom-nav').hidden=!loggedIn;if(!loggedIn)return;document.getElementById('account').textContent=user.email||'Pelanggan';msg('Dashboard siap.');try{await Promise.all([loadThemes(),loadEvents()]);await loadOrders();}catch(e){msg('Dashboard terbuka, tetapi data gagal dimuat: '+e.message);}}
 $('#login').onsubmit=async e=>{e.preventDefault();if(!db)return;const {data,error}=await db.auth.signInWithPassword({email:$('#email').value,password:$('#password').value});if(error){msg(error.message);return;}if(!data?.session){msg('Sesi belum tersedia. Silakan periksa konfirmasi email.');return;}await sessionChanged(data.session);};
 $('#signup').onclick=async()=>{
   if(!db)return;
