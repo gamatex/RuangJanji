@@ -23,8 +23,8 @@ function parseCsv(text){
 }
 $('#import-preview').onclick=async()=>{
  importRows=[];$('#import-confirm').disabled=true;
- const file=$('#import-file').files?.[0];if(!file)return msg('Pilih file CSV dahulu.');
- if(file.size>1024*1024)return msg('File maksimal 1 MB.');
+ const file=$('#import-file').files?.[0];if(!file)return msg('Pilih file CSV atau XLSX dahulu.');
+ if(file.size>1024*1024)return msg('File maksimal 1 MB.');if(!/\.(csv|xlsx)$/i.test(file.name))return msg('Format harus CSV atau XLSX.');
  try{
  const rows=file.name.toLowerCase().endsWith('.xlsx')?await readXlsx(file):parseCsv(await file.text());if(rows.length<2)throw Error('CSV tidak memiliki data');
  const header=rows.shift().map(x=>x.trim().toLowerCase());
@@ -85,7 +85,7 @@ $('#staff-form').onsubmit=async e=>{e.preventDefault();const email=$('#staff-ema
 
 async function readXlsx(file){
  if(file.size>1024*1024)throw Error('Excel maksimal 1 MB');
- const ExcelJS=(await import('https://esm.sh/exceljs@4.4.0?bundle')).default;
+ const excelModule=await import('https://esm.sh/exceljs@4.4.0?bundle');const ExcelJS=excelModule.default||excelModule;
  const workbook=new ExcelJS.Workbook();
  await workbook.xlsx.load(await file.arrayBuffer());
  const sheet=workbook.worksheets[0];if(!sheet)throw Error('Lembar Excel kosong');
@@ -108,7 +108,7 @@ async function printGuestCard(id){
  const g=guests.find(x=>x.id===id);if(!g)return;
  const w=window.open('','_blank');if(!w){msg('Izinkan pop-up untuk mencetak kartu tamu.');return;}
  try{
-  const QRCode=(await import('https://esm.sh/qrcode@1.5.4?bundle')).default;
+  const qrModule=await import('https://esm.sh/qrcode@1.5.4?bundle');const QRCode=qrModule.default||qrModule;
   const qr=await QRCode.toDataURL(g.token,{width:320,margin:2,errorCorrectionLevel:'M'});
   const name=safe(g.name),group=safe(g.group_name);
   w.document.write('<!doctype html><html lang="id"><meta charset="utf-8"><title>Kartu Tamu</title><style>body{font-family:Arial,sans-serif;text-align:center;margin:30px;color:#2C221E}.card{max-width:350px;margin:auto;border:2px solid #C86D51;border-radius:18px;padding:24px}img{width:240px}h1{font-size:22px}@media print{button{display:none}}</style><div class="card"><p>RUANGJANJI · BUKU TAMU</p><h1>'+name+'</h1><p>'+group+' · Kuota '+Number(g.quota)+'</p><img alt="Kode QR tamu" src="'+qr+'"><p>Tunjukkan QR kepada petugas</p></div><p><button onclick="window.print()">Cetak kartu</button></p></html>');
