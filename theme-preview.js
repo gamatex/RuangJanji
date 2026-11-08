@@ -1,13 +1,11 @@
-const slug=new URLSearchParams(location.search).get('tema');
-const theme=invitationCatalog.find(row=>row.slug===slug);
-if(theme){
-  document.title=theme.name+' · Ruang Janji';
-  document.querySelector('#title').textContent=theme.name;
-  document.querySelector('#image').src=theme.thumbnail;
-  document.querySelector('#image').alt='Referensi '+theme.name;
-  document.querySelector('#state').textContent=theme.status==='assets'?'Aset pendukung tersedia. Halaman referensi untuk tema ini belum tersedia.':'Pratinjau tersedia. Aset demo lengkap belum tersedia dalam paket referensi.';
-  document.querySelector('#order').href='checkout.html?tema='+encodeURIComponent(slug);
-}else{
-  document.querySelector('#state').textContent='Tema belum ditemukan. Pilih melalui koleksi tema.';
-  document.querySelector('#image').hidden=true;
-}
+import {previewImages} from './apps/ruangjanji/template-images.js';
+const slug=new URLSearchParams(location.search).get('tema')||'';
+const image=Object.hasOwn(previewImages,slug)?previewImages[slug]:null;
+const name=slug.replace(/-/g,' ').replace(/\b\w/g,s=>s.toUpperCase());
+document.querySelector('#title').textContent=image?name:'Tema tidak ditemukan';
+document.title=(image?name:'Tema tidak ditemukan')+' · RuangJanji';
+document.querySelector('#state').textContent=image?'Pratinjau gambar tema. Demo interaktif masih dalam pengembangan.':'Tema belum tersedia dalam katalog.';
+const preview=document.querySelector('#image');
+if(image){preview.src='/'+image;preview.alt='Pratinjau '+name;}else preview.hidden=true;
+const order=document.querySelector('#order');
+order.hidden=true;
