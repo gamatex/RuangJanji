@@ -38,3 +38,4 @@ try {
  }
  show('invitation');
 } catch(e){show('missing');}
+navigator.clipboard.writeText(accountNumber);
