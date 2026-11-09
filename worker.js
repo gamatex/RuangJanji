@@ -1,12 +1,68 @@
-import {previewImages} from './apps/ruangjanji/template-images.js';
-import {interactiveDemo} from './interactive-demo.js';
-const escapeHtml=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-function themePreview(request){
- const url=new URL(request.url),slug=url.searchParams.get('tema')||'';
- const image=Object.prototype.hasOwnProperty.call(previewImages,slug)?previewImages[slug]:null;
- const name=slug.replace(/-/g,' ').replace(/\b\w/g,char=>char.toUpperCase());
- const title=image?name:'Template tidak ditemukan';
- const html=`<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)} · RuangJanji</title><style>*{box-sizing:border-box}body{margin:0;background:#F5EBE6;color:#2C221E;font:16px/1.6 system-ui,sans-serif}main{max-width:650px;margin:auto;padding:22px}a{color:#a7543d}h1{font:normal 34px Georgia,serif;margin:16px 0}img{display:block;width:100%;border-radius:24px;box-shadow:0 12px 40px #2c221e20}p{color:#786960}.back{display:inline-block;padding:10px 0;text-decoration:none;font-weight:700}</style></head><body><main><a class="back" href="/apps/ruangjanji/">← Kembali ke RuangJanji</a><h1>${escapeHtml(title)}</h1>${image?`<img src="/${escapeHtml(image)}" alt="Pratinjau ${escapeHtml(title)}">`:'<p>Template tidak ditemukan.</p>'}<p>${image?'Ini pratinjau gambar referensi. Demo undangan interaktif untuk template ini belum tersedia.':'Silakan pilih template lain dari katalog.'}</p></main></body></html>`;
- return new Response(html,{status:image?200:404,headers:{'content-type':'text/html; charset=utf-8','cache-control':'no-store','x-ruangjanji-preview':'worker-v2'}});
-}
-export default {async fetch(request,env){const url=new URL(request.url);const path=url.pathname;const asset=()=>env.ASSETS.fetch(request);if(path==='/__ruangjanji_health')return new Response(JSON.stringify({ok:true,version:'redirect-diagnostic-v3',path,host:url.host}),{headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-ruangjanji-version':'redirect-diagnostic-v3'}});if(path==='/theme-preview.html')return interactiveDemo(url.searchParams.get('tema')||'');if(/^\/templates\/[a-z0-9]+(?:-[a-z0-9]+)+\/?$/.test(path)){const target=new URL('/templates/'+path.split('/').filter(Boolean).pop()+'.html',url);return env.ASSETS.fetch(new Request(target,request));}if(path==='/'||path.startsWith('/apps/')||path.startsWith('/packages/')||path.startsWith('/catalog-assets/')||path.includes('.')||path.startsWith('/templates/')||path.startsWith('/demo/'))return asset();if(/^\/[a-z0-9-]{3,80}\/?$/.test(path)){const u=new URL('/invitation.html',url);return env.ASSETS.fetch(new Request(u,request));}return asset();}};
+import { previewImages } from './apps/ruangjanji/template-images.js';
+import { interactiveDemo } from './interactive-demo.js';
+
+// Rute statis sistem yang TIDAK BOLEH ditangkap sebagai slug undangan tamu
+const RESERVED_ROUTES = new Set([
+  'checkout',
+  'invoice',
+  'theme-preview',
+  'invitation',
+  'minang',
+  'petualangan',
+  'motion-jawa'
+]);
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const path = url.pathname;
+    const cleanPath = path.replace(/\/+$/, '');
+    const bareSlug = cleanPath.slice(1);
+
+    // 1. Health check diagnosis
+    if (path === '/__ruangjanji_health') {
+      return new Response(JSON.stringify({ ok: true, version: 'fixed-routing-v4', path, host: url.host }), {
+        headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }
+      });
+    }
+
+    // 2. Demo interaktif
+    if (path === '/theme-preview.html' || path === '/theme-preview') {
+      return interactiveDemo(url.searchParams.get('tema') || '');
+    }
+
+    // 3. Layani clean URL halaman sistem tanpa memicu redirect 307 loop
+    if (RESERVED_ROUTES.has(bareSlug)) {
+      const mappedUrl = new URL(`/${bareSlug}.html`, url);
+      return env.ASSETS.fetch(new Request(mappedUrl, request));
+    }
+
+    // 4. Clean URLs untuk template (/templates/art-01 -> /templates/art-01.html)
+    if (/^\/templates\/[a-z0-9]+(?:-[a-z0-9]+)+\/?$/.test(path)) {
+      const templateName = path.split('/').filter(Boolean).pop();
+      const target = new URL(`/templates/${templateName}.html`, url);
+      return env.ASSETS.fetch(new Request(target, request));
+    }
+
+    // 5. Asset statis bawaan, folder apps, packages, dan file biner
+    if (
+      path === '/' ||
+      path.startsWith('/apps/') ||
+      path.startsWith('/packages/') ||
+      path.startsWith('/catalog-assets/') ||
+      path.startsWith('/templates/') ||
+      path.startsWith('/demo/') ||
+      path.includes('.')
+    ) {
+      return env.ASSETS.fetch(request);
+    }
+
+    // 6. Rute undangan publik pelanggan (hanya jika bukan reserved keyword)
+    if (/^\/[a-z0-9-]{3,80}$/.test(cleanPath) && !RESERVED_ROUTES.has(bareSlug)) {
+      const u = new URL('/invitation.html', url);
+      return env.ASSETS.fetch(new Request(u, request));
+    }
+
+    return env.ASSETS.fetch(request);
+  }
+};
