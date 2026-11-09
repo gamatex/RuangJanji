@@ -1,13 +1,75 @@
-plugins { id 'com.android.application' }
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
 android {
- namespace 'id.ruangjanji.mobile'
- compileSdk 35
- defaultConfig { minSdk 26; targetSdk 35; versionCode 1; versionName '0.1.0' }
- flavorDimensions 'app'
- productFlavors {
-  ruangjanji { dimension 'app'; applicationId 'id.ruangjanji.customer'; resValue 'string','app_name','RuangJanji'; buildConfigField 'String','APP_URL','"https://ruangjanji.dhjougkyha.workers.dev/apps/ruangjanji/"' }
-  bukutamu { dimension 'app'; applicationId 'id.ruangjanji.guestbook'; resValue 'string','app_name','RuangJanji Buku Tamu'; buildConfigField 'String','APP_URL','"https://ruangjanji.dhjougkyha.workers.dev/apps/buku-tamu/"' }
- }
- buildFeatures { buildConfig true }
- compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    namespace 'id.ruangjanji.mobile'
+    compileSdk 35
+
+    defaultConfig {
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '1.0.0'
+    }
+
+    flavorDimensions 'app'
+    productFlavors {
+        ruangjanji {
+            dimension 'app'
+            applicationId 'id.ruangjanji.customer'
+            resValue 'string', 'app_name', 'RuangJanji'
+            buildConfigField 'String', 'APP_URL', '"https://ruangjanji.dhjougkyha.workers.dev/apps/ruangjanji/"'
+            buildConfigField 'String', 'SUPABASE_URL', '"https://bfaarhffvylqqbxycuds.supabase.co"'
+            buildConfigField 'String', 'SUPABASE_KEY', '"sb_publishable_2Xf6OFt3oIZla83C8cq5jg_W3xOr8R7"'
+        }
+        bukutamu {
+            dimension 'app'
+            applicationId 'id.ruangjanji.guestbook'
+            resValue 'string', 'app_name', 'RuangJanji Buku Tamu'
+            buildConfigField 'String', 'APP_URL', '"https://ruangjanji.dhjougkyha.workers.dev/apps/buku-tamu/"'
+            buildConfigField 'String', 'SUPABASE_URL', '"https://bfaarhffvylqqbxycuds.supabase.co"'
+            buildConfigField 'String', 'SUPABASE_KEY', '"sb_publishable_2Xf6OFt3oIZla83C8cq5jg_W3xOr8R7"'
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.15.0'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
+
+    // CameraX & Google ML Kit Barcode Scanner
+    def camerax_version = "1.4.0"
+    implementation "androidx.camera:camera-core:${camerax_version}"
+    implementation "androidx.camera:camera-camera2:${camerax_version}"
+    implementation "androidx.camera:camera-lifecycle:${camerax_version}"
+    implementation "androidx.camera:camera-view:${camerax_version}"
+    implementation 'com.google.mlkit:barcode-scanning:17.3.0'
+
+    // Supabase Kotlin SDK & Ktor Client
+    def supabase_version = "2.5.4"
+    implementation "io.github.jan-tennert.supabase:postgrest-kt:${supabase_version}"
+    implementation "io.github.jan-tennert.supabase:auth-kt:${supabase_version}"
+    implementation "io.github.jan-tennert.supabase:storage-kt:${supabase_version}"
+    implementation "io.ktor:ktor-client-android:2.3.12"
+
+    // Kotlin Coroutines
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.7'
 }

@@ -76,7 +76,8 @@ async function checkToken(value){
 $('#qr-checkin').onclick=()=>checkToken($('#qr-token').value);
 async function stopScan(){scannerActive=false;scannerStream?.getTracks().forEach(t=>t.stop());scannerStream=null;$('#qr-video').style.display='none';}
 $('#scan-stop').onclick=stopScan;
-$('#scan-start').onclick=async()=>{
+window.onNativeQrScanned=async function(v){if(!v)return;await checkToken(v);};
+$('#scan-start').onclick=async()=>{ if(window.AndroidNative&&typeof window.AndroidNative.launchCameraScanner==='function'){window.AndroidNative.launchCameraScanner($('#event').value);return;}
  if(!('BarcodeDetector' in window)||!navigator.mediaDevices?.getUserMedia)return msg('Pemindai kamera belum didukung browser ini. Gunakan token manual.');
  try{
  await stopScan();scannerStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
