@@ -104,3 +104,19 @@ if(editId){
     }
   }catch{}
 }
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.0';
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY } from './packages/shared/src/config.js';
+
+const db = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+// Saat form.onsubmit sukses:
+await db.from('orders').insert({
+  id: draftId,
+  customer_name: customer.nama,
+  email: customer.email,
+  whatsapp: customer.whatsapp,
+  theme_slug: selection().theme,
+  total_amount: selection().total,
+  coupon_code: selection().coupon,
+  status: 'pending'
+});
