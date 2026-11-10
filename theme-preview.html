@@ -1,1 +1,141 @@
-<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pratinjau Tema · Ruang Janji</title><link rel="stylesheet" href="checkout.css"><link rel="stylesheet" href="catalog.css"><script type="module" src="theme-preview.js"></script><link rel="stylesheet" href="brand-palette.css"></head><body><header><a class="brand" href="./">✿ Ruang Janji</a><a href="./#tema">← Koleksi tema</a></header><main class="preview-main"><img id="image" alt="Pratinjau tema"><div><span class="eyebrow">KOLEKSI UNDANGAN</span><h1 id="title">Pratinjau tema</h1><p id="state"></p><p>Gambar ini menunjukkan desain referensi. Halaman ini menampilkan gambar referensi desain; animasi dan fitur undangan belum diimplementasikan untuk tema ini.</p><a class="button" href="./#tema">Lihat tema lain</a></div></main></body></html>
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pratinjau Tema · Ruang Janji</title>
+  <link rel="stylesheet" href="checkout.css">
+  <link rel="stylesheet" href="catalog.css">
+  <link rel="stylesheet" href="brand-palette.css">
+  <script type="module" src="theme-preview.js"></script>
+  <style>
+    .preview-card {
+      background: #ffffff;
+      border: 1px solid #e5dac9;
+      border-radius: 20px;
+      padding: 1.75rem;
+      box-shadow: 0 10px 30px rgba(50, 35, 25, 0.06);
+    }
+    .preview-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font: 700 11px/1 system-ui;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      background: #f4ece1;
+      color: #7a5c3e;
+      padding: 6px 12px;
+      border-radius: 50px;
+      margin-bottom: 0.75rem;
+    }
+    .preview-price {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #3b2c23;
+      margin: 0.5rem 0;
+    }
+    .preview-price small {
+      font-size: 0.9rem;
+      color: #8c7664;
+      font-weight: 400;
+      text-decoration: line-through;
+      margin-left: 8px;
+    }
+    .features-list {
+      list-style: none;
+      padding: 0;
+      margin: 1.25rem 0;
+      display: grid;
+      gap: 0.5rem;
+    }
+    .features-list li {
+      font: 500 13px/1.5 system-ui;
+      color: #4f4136;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .features-list li svg {
+      color: #2e7d32;
+      flex-shrink: 0;
+    }
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-top: 1.5rem;
+    }
+    .btn-cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0.85rem 1.25rem;
+      background: #3b2c23;
+      color: #ffffff !important;
+      font: 600 14px system-ui;
+      border-radius: 50px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .btn-cta:hover { background: #563b34; }
+    .btn-secondary {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0.85rem 1.25rem;
+      background: #f5ede2;
+      color: #3b2c23 !important;
+      border: 1px solid #d8c3ad;
+      font: 600 14px system-ui;
+      border-radius: 50px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .btn-secondary:hover { background: #ebdccb; }
+    .btn-text {
+      text-align: center;
+      font: 500 13px system-ui;
+      color: #7b6957;
+      text-decoration: underline;
+      padding: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="./">✿ Ruang Janji</a>
+    <a href="./#tema">← Koleksi tema</a>
+  </header>
+  <main class="preview-main">
+    <div>
+      <img id="image" alt="Pratinjau tema" loading="eager">
+    </div>
+    <div class="preview-card">
+      <span class="preview-badge" id="category-badge">Undangan Digital</span>
+      <h1 id="title">Pratinjau Tema</h1>
+      <p class="preview-price" id="price">Rp 49.000 <small id="was-price">Rp 98.000</small></p>
+      <p id="state" style="color: #6d5b4d; font-size: 14px; margin-bottom: 1rem;"></p>
+      
+      <ul class="features-list">
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Nama Tamu Dinamis &amp; Link Personal WhatsApp</li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Sampul Amplop &amp; Musik Latar Otomatis</li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Hitung Mundur &amp; Peta Navigasi Google Maps</li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Amplop Digital (Salin No. Rekening &amp; QRIS)</li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Konfirmasi Kehadiran (RSVP) &amp; Buku Tamu Online</li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Kompatibel Scanner QR Buku Tamu Android</li>
+      </ul>
+
+      <div class="button-group">
+        <a id="btn-order" class="btn-cta" href="./#tema">Pesan Tema Ini Sekarang →</a>
+        <a id="btn-live-demo" class="btn-secondary" href="/templates/deluxe-01?to=Tamu+Undangan" target="_blank" rel="noopener">
+          <span>Lihat Demo Interaktif Langsung ↗</span>
+        </a>
+        <a class="btn-text" href="./#tema">Lihat 80+ Pilihan Tema Lainnya</a>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

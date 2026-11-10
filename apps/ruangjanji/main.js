@@ -1,4 +1,17 @@
 import {previewImages} from './template-images.js';
+const interactiveTemplates = new Set([
+  "art-01", "art-02", "art-03", "art-04",
+  "birthday-01", "birthday-02",
+  "deluxe-01", "deluxe-02", "deluxe-03", "deluxe-04", "deluxe-05", "deluxe-06", "deluxe-07", "deluxe-08",
+  "minisite-01", "minisite-02", "minisite-03", "minisite-04", "minisite-05", "minisite-06", "minisite-07", "minisite-08", "minisite-09", "minisite-10",
+  "syari-01", "syari-02", "syari-03"
+]);
+function themeDemoUrl(slug) {
+  return interactiveTemplates.has(slug)
+    ? "/templates/" + slug + "?to=Tamu+Undangan"
+    : "/theme-preview.html?tema=" + encodeURIComponent(slug);
+}
+
 import {createClient} from 'https://esm.sh/@supabase/supabase-js@2.57.0';
 import {SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,requirePublishableKey} from '../../packages/shared/src/config.js';
 const $=s=>document.querySelector(s), msg=t=>$('#message').textContent=t;
@@ -36,7 +49,7 @@ document.querySelectorAll('[data-tab],[data-go]').forEach(b=>b.onclick=()=>showT
 $('#explore').onclick=()=>showTab('catalog');
 function themeCategory(slug){const s=slug.toLowerCase();if(s.startsWith('mini-motion')||s.startsWith('minimotion'))return 'MiniMotion';if(s.startsWith('minisite'))return 'Minisite';if(s.startsWith('birthday'))return 'Birthday';if(s.startsWith('deluxe'))return 'Deluxe';if(s.startsWith('motion'))return 'Motion';if(s.startsWith('syari')||s.startsWith('syar'))return "Syar'i";return 'Art';}
 function categoryChips(){return categories.map(t=>'<button type="button" data-category="'+safe(t)+'" class="'+(t===activeCategory?'active':'')+'">'+safe(t)+'</button>').join('');}
-function card(t){const name=t.slug.replace(/-/g,' ');const category=themeCategory(t.slug);const image=previewImages[t.slug];return '<article class="theme-card"><div class="theme-art">'+(image?'<img loading="lazy" alt="Pratinjau '+safe(name)+'" src="/'+safe(image)+'">':'<span>'+safe(name)+'</span>')+'</div><div class="theme-info"><strong>'+safe(name)+'</strong><small>'+safe(category)+'</small><p>Rp '+Number(t.amount).toLocaleString('id-ID')+'</p><div class="card-actions"><a class="preview-link" href="/theme-preview.html?tema='+encodeURIComponent(t.slug)+'" target="_blank" rel="noopener">Lihat demo</a><button type="button" data-detail="'+safe(t.slug)+'">Detail tema</button></div></div></article>';}
+function card(t){const name=t.slug.replace(/-/g,' ');const category=themeCategory(t.slug);const image=previewImages[t.slug];return '<article class="theme-card"><div class="theme-art">'+(image?'<img loading="lazy" alt="Pratinjau '+safe(name)+'" src="/'+safe(image)+'">':'<span>'+safe(name)+'</span>')+'</div><div class="theme-info"><strong>'+safe(name)+'</strong><small>'+safe(category)+'</small><p>Rp '+Number(t.amount).toLocaleString('id-ID')+'</p><div class="card-actions"><a class="preview-link" href="'+themeDemoUrl(t.slug)+'" target="_blank" rel="noopener">Lihat demo</a><button type="button" data-detail="'+safe(t.slug)+'">Detail tema</button></div></div></article>';}
 function renderThemes(){const filtered=themes.filter(t=>(activeCategory==='Semua'||themeCategory(t.slug)===activeCategory)&&t.slug.toLowerCase().includes(searchTerm));$('#categories').innerHTML=categoryChips();$('#category-home').innerHTML=categoryChips();$('#theme-count').textContent=filtered.length+' desain';$('#themes').innerHTML=filtered.map(card).join('')||'<p class="empty">Template tidak ditemukan.</p>';$('#featured').innerHTML=themes.slice(0,4).map(card).join('');document.querySelectorAll('[data-category]').forEach(b=>b.onclick=()=>{activeCategory=b.dataset.category;showTab('catalog');renderThemes();});document.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>openThemeDetail(b.dataset.detail));}
 let detailSlug=null;
 function closeThemeDetail(){const el=$('#theme-detail');if(el)el.hidden=true;detailSlug=null;document.body.classList.remove('detail-open');}
@@ -51,7 +64,7 @@ function openThemeDetail(slug){
  $('#detail-status').textContent=theme.enabled?'Template dapat dipilih untuk membuat undangan.':'Template belum dibuka untuk pemesanan. Kamu tetap dapat melihat demonya.';
  $('#detail-image').hidden=!image;
  if(image)$('#detail-image').src='/'+image;
- $('#detail-demo').href='/theme-preview.html?tema='+encodeURIComponent(slug);
+ $('#detail-demo').href=themeDemoUrl(slug);
  $('#detail-select').disabled=!theme.enabled;
  $('#detail-select').textContent=theme.enabled?'Pilih template':'Belum tersedia';
  $('#theme-detail').hidden=false;document.body.classList.add('detail-open');
@@ -151,7 +164,7 @@ $('#confirm-delete-event').onclick=async()=>{const e=eventCache.find(x=>x.id===d
 document.querySelectorAll('[data-event-action]').forEach(b=>b.onclick=async()=>{
  const id=actionEventId,e=eventCache.find(x=>x.id===id);if(!e)return;
  const a=b.dataset.eventAction;closeEventActions();
- if(a==='preview'){window.open('/theme-preview.html?tema='+encodeURIComponent(e.theme),'_blank','noopener');return;}
+ if(a==='preview'){window.open(themeDemoUrl(e.theme),'_blank','noopener');return;}
  if(a==='edit'){if(e.status!=='draft'){msg('Pengeditan undangan terbit memerlukan alur khusus.');return;}await editEvent(id);return;}
  if(a==='addon'){msg('Add-on belum tersedia. Tidak ada biaya yang diproses.');return;}
  if(a==='settings'){await openInvitationSettings(id);return;}

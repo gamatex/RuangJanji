@@ -13,3 +13,5 @@ android-bukutamu/assets/
 *.keystore
 *.log
 .DS_Store
+-e dist/
+reports/
