@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RuangJanji</string>
+    <string name="scanner_title">Meja Penerima Tamu</string>
+    <string name="scanner_instruction">Arahkan kamera ke QR Code pada kartu undangan tamu</string>
+    <string name="checkin_success">Check-in Berhasil!</string>
+    <string name="already_checked_in">Tamu sudah pernah check-in sebelumnya</string>
+    <string name="souvenir_given">Souvenir Diserahkan</string>
+    <string name="btn_checkin">Check-in Hadir</string>
+    <string name="btn_souvenir">Beri Souvenir</string>
+    <string name="btn_next_guest">Scan Tamu Berikutnya</string>
+    <string name="torch_on">Nyalakan Senter</string>
+    <string name="torch_off">Matikan Senter</string>
+</resources>

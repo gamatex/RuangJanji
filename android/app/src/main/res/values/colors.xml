@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="rj_terracotta">#C86D51</color>
+    <color name="rj_terracotta_dark">#9E472E</color>
+    <color name="rj_terracotta_light">#F5EBE6</color>
+    <color name="rj_background">#FDFBF7</color>
+    <color name="rj_surface">#FFFFFF</color>
+    <color name="rj_text_primary">#2C221E</color>
+    <color name="rj_text_secondary">#786960</color>
+    <color name="rj_border">#E8DCD4</color>
+    
+    <color name="badge_vip_bg">#FEF3C7</color>
+    <color name="badge_vip_text">#B45309</color>
+    <color name="badge_family_bg">#D1FAE5</color>
+    <color name="badge_family_text">#047857</color>
+    <color name="badge_friend_bg">#DBEAFE</color>
+    <color name="badge_friend_text">#1D4ED8</color>
+    
+    <color name="status_present">#10B981</color>
+    <color name="status_pending">#F59E0B</color>
+    <color name="status_souvenir">#8B5CF6</color>
+</resources>

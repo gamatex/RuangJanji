@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kebijakan Privasi · RuangJanji & RuangJanji Buku Tamu</title>
+  <meta name="description" content="Kebijakan Privasi resmi aplikasi RuangJanji dan RuangJanji Buku Tamu untuk Google Play Store dan layanan web.">
+  <link rel="stylesheet" href="brand-palette.css">
+  <style>
+    :root {
+      --bg: #FDFBF7;
+      --surface: #FFFFFF;
+      --text: #2C221E;
+      --muted: #6E5F57;
+      --accent: #C86D51;
+      --border: #E8DCD4;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.6 system-ui, -apple-system, sans-serif;
+      padding: 0 16px 64px;
+    }
+    header {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 32px 0 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      font-size: 20px;
+      font-weight: 700;
+      font-family: Georgia, serif;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .back {
+      font-size: 14px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .back:hover { color: var(--accent); }
+    main {
+      max-width: 800px;
+      margin: 32px auto 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px 32px;
+      box-shadow: 0 4px 20px rgba(44, 34, 30, 0.04);
+    }
+    h1 {
+      font-family: Georgia, serif;
+      font-size: 28px;
+      color: var(--text);
+      margin: 0 0 8px;
+      line-height: 1.3;
+    }
+    .updated {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 28px;
+      display: block;
+    }
+    h2 {
+      font-size: 19px;
+      margin-top: 32px;
+      color: var(--accent);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    h3 {
+      font-size: 16px;
+      margin-top: 20px;
+      color: var(--text);
+    }
+    p, li {
+      color: #4A3E38;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    ul { padding-left: 20px; margin: 12px 0; }
+    li { margin-bottom: 8px; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #F5EBE6;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 600;
+      margin-right: 6px;
+    }
+    .highlight-box {
+      background: #FDFBF7;
+      border-left: 4px solid var(--accent);
+      padding: 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 20px 0;
+      font-size: 14px;
+    }
+    footer {
+      max-width: 800px;
+      margin: 32px auto 0;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    @media (max-width: 600px) {
+      main { padding: 24px 20px; }
+      h1 { font-size: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/">✿ Ruang Janji</a>
+    <a class="back" href="/">← Beranda</a>
+  </header>
+
+  <main>
+    <h1>Kebijakan Privasi</h1>
+    <span class="updated">Terakhir diperbarui: 9 November 2026 · Berlaku untuk Website & Aplikasi Android</span>
+
+    <div class="highlight-box">
+      Kebijakan Privasi ini mengatur bagaimana <strong>RuangJanji</strong> (dikembangkan oleh <em>gamatex</em>) mengumpulkan, menggunakan, dan melindungi informasi Anda pada layanan web (<a href="https://ruangjanji.dhjougkyha.workers.dev" style="color:var(--accent);">ruangjanji.dhjougkyha.workers.dev</a>) serta dua aplikasi Android companion di Google Play Store:
+      <br><br>
+      • <span class="badge">Aplikasi Klien</span> <strong>RuangJanji</strong> (Package: <code>id.ruangjanji.customer</code>)<br>
+      • <span class="badge">Aplikasi Petugas</span> <strong>RuangJanji Buku Tamu</strong> (Package: <code>id.ruangjanji.guestbook</code>)
+    </div>
+
+    <h2>1. Data yang Kami Kumpulkan</h2>
+    <p>Kami hanya mengumpulkan data yang benar-benar dibutuhkan untuk menyediakan layanan pembuatan undangan pernikahan digital dan pencatatan kehadiran tamu:</p>
+    <ul>
+      <li><strong>Informasi Akun Pemesan (Mempelai):</strong> Alamat email dan kata sandi terenkripsi (dikelola oleh Supabase Auth) untuk mengamankan dasbor pengeditan undangan.</li>
+      <li><strong>Detail Acara Pernikahan:</strong> Nama calon pengantin, tanggal & waktu akad/resepsi, tautan lokasi Google Maps, kisah cinta, nomor rekening penerima amplop digital, dan galeri foto prewedding yang diunggah secara sukarela.</li>
+      <li><strong>Daftar Tamu Undangan:</strong> Nama tamu, nomor telepon WhatsApp (opsional, untuk pengiriman tautan undangan), kuota kehadiran rombongan, dan status RSVP.</li>
+      <li><strong>Catatan Kehadiran Acara (Buku Tamu):</strong> Waktu check-in, jumlah anggota rombongan yang hadir, dan status pengambilan souvenir yang dicatat oleh petugas resepsi.</li>
+    </ul>
+
+    <h2>2. Penggunaan Izin Perangkat Android (Device Permissions)</h2>
+    <p>Aplikasi kami dirancang dengan prinsip minimasi izin (least privilege) sesuai kebijakan Google Play Store Developer Policy:</p>
+    <ul>
+      <li><strong>Kamera (<code>android.permission.CAMERA</code>):</strong>
+        <br>Digunakan secara eksklusif pada aplikasi <em>RuangJanji Buku Tamu</em> untuk membaca kode QR pada kartu undangan tamu di meja resepsi secara real-time menggunakan Google ML Kit. Kamera <strong>tidak pernah</strong> mengambil foto, merekam video, atau menyimpan citra wajah tamu ke penyimpanan lokal maupun server.
+      </li>
+      <li><strong>Getaran (<code>android.permission.VIBRATE</code>):</strong>
+        <br>Digunakan untuk memberikan umpan balik getar haptik sesaat ketika kartu QR tamu berhasil terverifikasi oleh petugas resepsi.
+      </li>
+      <li><strong>Akses Internet (<code>android.permission.INTERNET</code> & <code>ACCESS_NETWORK_STATE</code>):</strong>
+        <br>Digunakan untuk sinkronisasi data undangan, status RSVP, dan check-in tamu melalui jalur komunikasi terenkripsi SSL/TLS (HTTPS).
+      </li>
+      <li><strong>Akses Galeri & Foto (Photo Picker):</strong>
+        <br>Aplikasi menggunakan <em>Android 13/14 Photo Picker API</em> yang terisolasi. Aplikasi hanya menerima foto yang Anda pilih secara sadar untuk dijadikan galeri prewedding tanpa memiliki akses ke galeri foto pribadi Anda lainnya.
+      </li>
+      <li><strong>Buku Telepon (<code>READ_CONTACTS</code> - Opsional):</strong>
+        <br>Hanya digunakan jika pengguna secara sadar menekan tombol "Impor dari Kontak HP" pada aplikasi RuangJanji untuk mempermudah memasukkan nama tamu. Kami tidak pernah menyalin, menjual, atau mengunggah seluruh buku telepon Anda.
+      </li>
+    </ul>
+
+    <h2>3. Keamanan & Penyimpanan Data</h2>
+    <ul>
+      <li>Seluruh pertukaran data antara aplikasi Android, website, dan database dilindungi oleh enkripsi <strong>HTTPS / TLS 1.3</strong> standar industri perbankan.</li>
+      <li>Data tersimpan di infrastruktur komputasi awan global berstandar enterprise (Cloudflare Workers & Supabase PostgreSQL) dengan perlindungan <em>Row Level Security (RLS)</em> yang membatasi hak akses data hanya untuk pemilik acara dan staf resmi yang diotorisasi.</li>
+      <li>Data check-in offline pada aplikasi Buku Tamu disimpan dalam database lokal perangkat (Room SQLite terenkripsi) dan otomatis disinkronkan saat terhubung kembali ke internet.</li>
+    </ul>
+
+    <h2>4. Pembagian Data kepada Pihak Ketiga</h2>
+    <p>Kami <strong>tidak pernah menjual, memperdagangkan, atau menyewakan</strong> data pribadi pengguna atau tamu undangan kepada pihak ketiga untuk keperluan periklanan atau pemasaran.</p>
+    <p>Data hanya diteruskan kepada penyedia infrastruktur teknis yang secara langsung mendukung operasional layanan kami:</p>
+    <ul>
+      <li><strong>Supabase Inc.</strong>: Layanan otentikasi akun dan basis data terkelola.</li>
+      <li><strong>Cloudflare Inc.</strong>: Layanan hosting server tepi (Edge compute) dan perlindungan DDoS.</li>
+      <li><strong>Google LLC</strong>: Pustaka pemrosesan citra barcode pada perangkat (Google ML Kit on-device).</li>
+    </ul>
+
+    <h2>5. Hak Pengguna & Penghapusan Data (Data Deletion)</h2>
+    <p>Pengguna memiliki hak penuh atas data pribadi mereka, meliputi:</p>
+    <ul>
+      <li>Melihat dan mengubah informasi acara atau daftar tamu kapan saja melalui dasbor aplikasi.</li>
+      <li>Mengunduh riwayat kehadiran dan ucapan tamu dalam format CSV / Excel.</li>
+      <li>Meminta penghapusan permanen akun beserta seluruh data acara, foto, dan daftar tamu yang terkait.</li>
+    </ul>
+    <p>Untuk mengajukan permohonan penghapusan data secara permanen, Anda dapat menghubungi kami melalui kontak dukungan di bawah ini dengan menyertakan alamat email yang terdaftar.</p>
+
+    <h2>6. Kontak Pengembang & Dukungan</h2>
+    <p>Jika Anda memiliki pertanyaan, kendala, atau masukan terkait Kebijakan Privasi ini, silakan hubungi tim pengembang kami:</p>
+    <ul>
+      <li><strong>Pengembang:</strong> gamatex (RuangJanji Project)</li>
+      <li><strong>Email Dukungan:</strong> <a href="mailto:dhjougkyha@gmail.com" style="color:var(--accent);">dhjougkyha@gmail.com</a></li>
+      <li><strong>Website Resmi:</strong> <a href="https://ruangjanji.dhjougkyha.workers.dev" target="_blank" rel="noopener" style="color:var(--accent);">https://ruangjanji.dhjougkyha.workers.dev</a></li>
+    </ul>
+  </main>
+
+  <footer>
+    <p>© 2026 RuangJanji by gamatex. Hak Cipta Dilindungi Undang-Undang.</p>
+  </footer>
+</body>
+</html>

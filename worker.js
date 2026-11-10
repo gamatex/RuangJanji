@@ -9,7 +9,8 @@ const RESERVED_ROUTES = new Set([
   'invitation',
   'minang',
   'petualangan',
-  'motion-jawa'
+  'motion-jawa',
+  'privacy'
 ]);
 
 // 27 Template yang valid dan siap dilayani langsung

@@ -4,6 +4,7 @@ import {join,dirname} from 'node:path';
 const output='dist';mkdirSync(output,{recursive:true});
 const entries = [
   'index.html',
+  'privacy.html',
   'brand.svg',
   'catalog.js',
   'catalog.css',
