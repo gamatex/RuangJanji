@@ -1,6 +1,6 @@
 import {readdirSync,readFileSync,writeFileSync,existsSync,mkdirSync} from 'node:fs';
 import {join,resolve,dirname,extname} from 'node:path';
-const root=process.cwd(),dir=join(root,'templates');
+const root=new URL("..", import.meta.url).pathname.replace(/\/$/, ""),dir=join(root,'templates');
 const templates=readdirSync(dir).filter(n=>/^(art|birthday|deluxe|minisite|syari)-\d+\.html$/.test(n)).sort();
 const mediaFiles=readdirSync(join(root,'catalog-assets'));
 const records={};

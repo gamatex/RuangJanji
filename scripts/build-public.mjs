@@ -1,7 +1,7 @@
 import './map-template-media.mjs';
 import {cpSync,existsSync,mkdirSync,readdirSync,statSync,copyFileSync} from 'node:fs';
 import {join,dirname} from 'node:path';
-const output='dist';mkdirSync(output,{recursive:true});
+const root=new URL("..", import.meta.url).pathname.replace(/\/$/, ""); const output=join(root, 'dist');mkdirSync(output,{recursive:true});
 const entries = [
   'index.html',
   'privacy.html',
@@ -51,7 +51,7 @@ const entries = [
 ];
 let copied=0,skipped=0;
 function copy(src,dst){if(!existsSync(src))return;const stat=statSync(src);if(stat.isDirectory()){for(const name of readdirSync(src))copy(join(src,name),join(dst,name));return;}if(stat.size>25*1024*1024){console.warn('SKIPPED oversized asset:',src,stat.size);skipped++;return;}mkdirSync(dirname(dst),{recursive:true});copyFileSync(src,dst);copied++;}
-for(const entry of entries)copy(entry,join(output,entry));
+for(const entry of entries)copy(join(root, entry),join(output,entry));
 if(!existsSync(join(output,'index.html')))throw new Error('Website index.html missing');
 
 // Clean URLs Index Generator for Cloudflare Assets (Eliminates 307 Redirect Loops)
