@@ -53,4 +53,29 @@ let copied=0,skipped=0;
 function copy(src,dst){if(!existsSync(src))return;const stat=statSync(src);if(stat.isDirectory()){for(const name of readdirSync(src))copy(join(src,name),join(dst,name));return;}if(stat.size>25*1024*1024){console.warn('SKIPPED oversized asset:',src,stat.size);skipped++;return;}mkdirSync(dirname(dst),{recursive:true});copyFileSync(src,dst);copied++;}
 for(const entry of entries)copy(entry,join(output,entry));
 if(!existsSync(join(output,'index.html')))throw new Error('Website index.html missing');
-console.log('Public build complete:',copied,'files copied,',skipped,'oversized assets skipped');
+
+// Clean URLs Index Generator for Cloudflare Assets (Eliminates 307 Redirect Loops)
+const cleanRoutes = ["checkout", "invoice", "privacy", "theme-preview", "invitation", "minang", "petualangan", "motion-jawa"];
+for (const route of cleanRoutes) {
+  const htmlFile = join(output, route + ".html");
+  if (existsSync(htmlFile)) {
+    const routeDir = join(output, route);
+    mkdirSync(routeDir, { recursive: true });
+    copyFileSync(htmlFile, join(routeDir, "index.html"));
+  }
+}
+
+// Generate index.html for each template clean URL
+const templatesDir = join(output, "templates");
+if (existsSync(templatesDir)) {
+  for (const file of readdirSync(templatesDir)) {
+    if (file.endsWith(".html") && file !== "index.html") {
+      const slug = file.replace(/\.html$/, "");
+      const tDir = join(templatesDir, slug);
+      mkdirSync(tDir, { recursive: true });
+      copyFileSync(join(templatesDir, file), join(tDir, "index.html"));
+    }
+  }
+}
+
+console.log('Public build complete:',copied,'files copied,',skipped,'oversized assets skipped (Clean URLs index.html mapped)');
