@@ -14,6 +14,8 @@ const entries = [
   'theme-preview.js',
   'template-runtime.js',
   'template-runtime.css',
+  'preview-stage.css',
+  'preview-stage.js',
   'photo-empty.svg',
   'checkout.css',
   'checkout.html',

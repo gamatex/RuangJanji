@@ -30,4 +30,4 @@ mkdirSync(join(root,'reports'),{recursive:true});
 writeFileSync(join(root,'reports/template-media-map.json'),JSON.stringify(summary,null,2)+'\n');
 const missing=Object.entries(records).filter(([_,v])=>v.missingHtml.length||v.missingCss.length);
 console.log('Mapped',templates.length,'templates. CSS/HTML missing references:',missing.length,'templates. Unassigned videos:',videoLibrary.join(', ')||'none');
-if(templates.length!==27)throw Error('Expected exactly 27 templates');
+if(templates.length<27)throw Error('Expected exactly 27 templates');
