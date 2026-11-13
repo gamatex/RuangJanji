@@ -215,6 +215,10 @@ async function safeAssetFetch(env, targetUrl, originalRequest) {
 
 export default {
   async fetch(request, env) {
+    const url = new URL(request.url);
+    const path = url.pathname;
+    const cleanPath = path.replace(/\/+$/, '');
+    const bareSlug = cleanPath.slice(1);
 
     // 0. Transparent Proxy for Next.js and CDN assets from template engine
     if (path.startsWith('/_next/') || path.startsWith('/covers/') || path.startsWith('/covers-square/') || path.startsWith('/brand/')) {
@@ -230,11 +234,6 @@ export default {
       headers.set('cache-control', 'public, max-age=604800, immutable');
       return new Response(upstreamRes.body, { status: upstreamRes.status, headers });
     }
-  
-    const url = new URL(request.url);
-    const path = url.pathname;
-    const cleanPath = path.replace(/\/+$/, '');
-    const bareSlug = cleanPath.slice(1);
 
     // 1. Health check diagnosis
     if (path === '/__ruangjanji_health') {
@@ -259,7 +258,7 @@ export default {
     }
 
     // 4. Clean URLs untuk template (/templates/art-01)
-    if (/^\/templates\/[a-z0-9]+(?:-[a-z0-9]+)+\/?$/.test(path)) {
+    if (/^\/templates\/[a-z0-9-]+\/?$/.test(path)) {
       return safeAssetFetch(env, new URL(cleanPath + url.search, url), request);
     }
 
