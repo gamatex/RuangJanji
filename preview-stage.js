@@ -272,7 +272,7 @@
 
     const iframe = document.createElement('iframe');
     iframe.className = 'pv-embed-frame';
-    const embedSrc = '/templates/' + encodeURIComponent(slug) + '.html?embed=1&to=' + encodeURIComponent(to);
+    const embedSrc = '/templates/' + encodeURIComponent(slug) + '?embed=1&to=' + encodeURIComponent(to);
     iframe.src = embedSrc;
     iframe.title = 'Pratinjau ' + slug;
 
